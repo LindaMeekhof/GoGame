@@ -9,7 +9,7 @@ import java.net.UnknownHostException;
 
 
 
-public class ClientGO {
+public class ClientGO2 {
 	private static final String USAGE
 		= "usage: client.ClientGO <name> <address> <port>";
 
@@ -65,9 +65,7 @@ public class ClientGO {
             Thread serverInputHandler = new Thread(client);
             serverInputHandler.start(); //run method regelt de inputstream die komt vanaf de server
           
-            String clientInput = client.readStringConsole("input");
-            System.out.println("sending client input " + clientInput + " to server");
-            client.sendMessage(clientInput);
+            client.readStringConsole("input");
             
         } catch (IOException e) {
             e.printStackTrace();

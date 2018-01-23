@@ -25,7 +25,6 @@ public abstract class Player {
 		this.stone = stone;
 	}
 
-
 	/**
 	 * Returns the name of the player.
 	 * @return the name of the player.

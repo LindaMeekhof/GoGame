@@ -523,5 +523,9 @@ public class Board {
 		}
 		return false;
 	}
-	 
+	
+	public static void main(String [ ] args) {
+		Board board = new Board();
+		System.out.print(board.toString());
+	}
 } //class

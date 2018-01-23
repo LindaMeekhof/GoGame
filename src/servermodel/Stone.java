@@ -30,4 +30,16 @@ public enum Stone {
             return __;
         }
     }
+	
+	//ToString ??
+	public String toString() {
+		if (this.equals(Stone.__)) {
+			return "+";
+		} else if (this.equals(Stone.b)) {
+			return "b";
+		} else if (this.equals(Stone.w)) {
+			return "w";
+		}
+		return null;
+	}
 }

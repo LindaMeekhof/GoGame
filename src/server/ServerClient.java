@@ -9,60 +9,64 @@ import java.net.Socket;
 
 import general.Protocol;
 
-public class ServerClient extends Protocol implements Runnable  {
-	//name of the player
-	private String name;
-	private Socket sock;
+public class Serverclient extends Thread {
+	
 	private BufferedReader in;
 	private BufferedWriter out;
-	
-	//extends protocol??
-	public ServerClient(String playername, Socket sockArg) throws IOException {
-		name = playername;
-		sock = sockArg; 
+	private ServerGO server;
+	private Socket sock;
+
+	/**
+	 * Constructs a Serverclient.
+	 * @param playername
+	 * @param sockArg
+	 * @throws IOException
+	 */
+	public Serverclient(ServerGO serverArgument, Socket sockArgument) throws IOException {
+		this.server = serverArgument;
+		this.sock = sockArgument; 
 		in = new BufferedReader(new InputStreamReader(sock.getInputStream()));
 		out = new BufferedWriter(new OutputStreamWriter(sock.getOutputStream()));
 	}
 
-	
-	@Override
-	public void run() {
-		// TODO Auto-generated method stub
-		
-	}
-	
+	private String line;
 	/**
 	 * Handle the clientInput which comes through the Socket.
 	 */
-	public void readClientInput() {
-		String line;
+	@Override
+	public void run() {
+		//String line;
 		try { 
 			while (in.readLine() != null) {
 				line = in.readLine();
-				System.out.println("de Serverclient heeft een line ontvangen");
-				//split the line for the right arguments.
-				String[] words = line.split(General.DELIMITER1);
-				if (words.length == 12 && words[0].equals(Client.NAME) 
-						&& words[2].equals(Client.VERSION) && words[3].equals(Protocol.VERSION_NO)) {
-					System.out.println("The Server received startup settings: name, version etc");
-					//send name door naar game
-				}
-				
+				System.out.println(line);
 			} 
-		
 		} catch (IOException e) {
-			System.out.println("geen line gelezen"); //vragen om input
-			e.printStackTrace();
+			System.out.println("No line was read"); 
+			//sentGameData("Graag valid input");//vragen om input
 		}
-
+	}
+	
+	//returns the line which comes from the player.
+	public String inputPlayer() {
+		return line;
 	}
 	
 	/** 
-	 * Send gameData to the clients. Andere thread game.
+	 * Send gameData to the clients. 
 	 */
-	public void sentGameData() {
-		
+	public void sentGameData(String message) {
+		try {
+			out.write(message);
+			out.newLine();
+			out.flush();
+		} catch (IOException e) {
+			System.out.println("Error with sending data to the client");
+			//remove this Serverclient of the list from Serverclients in the server.
+			server.removeServerclient(this);
+		}
 	}
 
+	
 	
 }
