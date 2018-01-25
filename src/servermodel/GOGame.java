@@ -51,10 +51,10 @@ public class GOGame {
 		return respons.equals(yes);
 	}
 	
-	private void play() {
+	private void play(int index, Stone stone) {
 		updateView();
     	while (!board.gameOver()) {
-    		players[currentPlayer].makeMove(board); //makeMove is in player class, waar je niet bij kan...
+    		board.setFields(index, stone); //makeMove is in player class, waar je niet bij kan...
     		currentPlayer = (currentPlayer + 1) % 2;
     		updateView();
     	}

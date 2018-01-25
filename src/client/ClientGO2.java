@@ -60,7 +60,7 @@ public class ClientGO2 {
         //communicatieObject aanmaken. In dit geval een ClientController
         // create Peer object and start the two-way communication
         try {
-            Clientcontroller client = new Clientcontroller(name, sock);
+            PlayerController client = new PlayerController(name, sock);
            
             Thread serverInputHandler = new Thread(client);
             serverInputHandler.start(); //run method regelt de inputstream die komt vanaf de server

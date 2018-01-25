@@ -66,16 +66,7 @@ public class ServerGO {
 
 				Socket sock = ssock.accept();
 				System.out.println("New client connected!"); 
-				BufferedWriter out = new BufferedWriter(new OutputStreamWriter(sock.getOutputStream()));
-				try {
-					Thread.sleep(10000);
-				} catch (InterruptedException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-				}
-				out.write("hoihoi");
-				out.newLine();
-				out.flush();
+				
 				Serverclient client = new Serverclient(this, sock);
 				client.start();
 				addServerclient(client);

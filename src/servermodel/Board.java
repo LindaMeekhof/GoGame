@@ -524,8 +524,14 @@ public class Board {
 		return false;
 	}
 	
-	public static void main(String [ ] args) {
+	public static void main(String[] args) {
 		Board board = new Board();
+		System.out.print(board.toString());
+		board.setField(4, 4, Stone.b);
+		board.setField(3, 4, Stone.b);
+		board.setField(6, 6, Stone.w);
+		System.out.print(board.toString());
+		board.reset();
 		System.out.print(board.toString());
 	}
 } //class

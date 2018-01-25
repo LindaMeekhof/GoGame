@@ -60,8 +60,12 @@ public abstract class Player {
 	 */
 	//@requires stone != null;
 	//@ensures this.getStone == name;
-	public void setStone(Stone stone) {
-		this.stone = stone;
+	public void setStone(String colour) {
+		if (colour.equalsIgnoreCase("black")) {
+			stone = Stone.b;
+		} else {
+			stone = Stone.w;
+		}
 	}
 	
 	/**
