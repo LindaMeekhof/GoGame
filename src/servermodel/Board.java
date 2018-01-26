@@ -19,7 +19,7 @@ import java.util.Set;
 
 public class Board {
 	//Constants
-	private int DIM = 13; // misschien kan de gebruiker die ook wel invoeren.
+	private int dimension; 
 	private static final String LINE = "---"; // voor TUI belijning
 	
 	
@@ -41,14 +41,24 @@ public class Board {
 	 * this.getField(i) == Stone.__);
 	 */
 	// Constructor
-	public Board() {
-		fields = new Stone[DIM * DIM];
+	public Board(int dimension) {
+		this.dimension = dimension;
+		fields = new Stone[dimension * dimension];
 		
 		// All fields are initially empty
-		for (int i = 0; i < DIM * DIM; i++) {
+		for (int i = 0; i < dimension * dimension; i++) {
 			fields[i] = Stone.__;
 		}
 	}
+	
+//	public void boardInit() {
+//		fields = new Stone[dimension * dimension];
+//		
+//		// All fields are initially empty
+//		for (int i = 0; i < dimension * dimension; i++) {
+//			fields[i] = Stone.__;
+//		}
+//	}
 	
 	/**
      * Creates a deep copy of this field. THis can be useful for trying positions and for the rule: 
@@ -59,8 +69,8 @@ public class Board {
                                 \result.getField(i) == this.getField(i));
       @*/
 	public Board deepCopy() {
-		Board copyboard = new Board();
-		for (int i = 0; i < DIM * DIM; i++) {
+		Board copyboard = new Board(dimension);
+		for (int i = 0; i < dimension * dimension; i++) {
 			copyboard.fields[i] = this.fields[i];
 		}
 		return copyboard;
@@ -85,7 +95,7 @@ public class Board {
      * @return
      */
     public int getDIM() {
-		return DIM;
+		return dimension;
 	}
 
     /**
@@ -93,7 +103,7 @@ public class Board {
      * @param dIM
      */
 	public void setDIM(int dIM) {
-		DIM = dIM;
+		dimension = dIM;
 	}
 
 	/**
@@ -144,14 +154,14 @@ public class Board {
     //@ requires 0 <= col & col < DIM;
     /*@pure*/
     public int index(int row, int col) {
-		return row * DIM + col;
+		return row * dimension + col;
     }
     
     public int[] indexToRowCol(int index) {
 	    	int[] coordinates = new int[2];
-	    	int row = index / DIM;
+	    	int row = index / dimension;
 	    	coordinates[0] = row;
-	    	int col = index % DIM;
+	    	int col = index % dimension;
 	    	coordinates[1] = col;
 	    	return coordinates;
     }
@@ -166,7 +176,7 @@ public class Board {
     /*@pure*/
     //@ ensures \result == (0 <=index && index < DIM * DIM);
     public boolean isField(int index) {
-     	return (0 <= index) && (index < DIM * DIM); 
+     	return (0 <= index) && (index < dimension * dimension); 
     }
 	
     /**
@@ -178,8 +188,8 @@ public class Board {
     /*pure*/
     //@ ensures \result == (0 <= row < DIM && 0<= col < DIM)
     public boolean isField(int row, int col) {
-     	return (0 <= row) && (row < DIM) && 
-   			 (0 <= col) && (col < DIM);
+     	return (0 <= row) && (row < dimension) && 
+   			 (0 <= col) && (col < dimension);
     }
     
     /*pure*/
@@ -199,7 +209,7 @@ public class Board {
 	/*pure*/
 	public boolean isFull() {
 		boolean isFull = true;
-		for (int i = 0; i < DIM * DIM; i++) {
+		for (int i = 0; i < dimension * dimension; i++) {
 			if (isEmptyField(i)) { 
 				isFull = false;
 			}
@@ -219,7 +229,7 @@ public class Board {
 	
 	//@ ensures (\forall int i; 0 <= i & i < DIM*DIM; this.field == Stone.__);
 	public void reset() {
-		for (int i = 0; i < DIM * DIM; i++) {
+		for (int i = 0; i < dimension * dimension; i++) {
 			fields[i] = Stone.__;
 		}
 	}
@@ -272,13 +282,13 @@ public class Board {
 		if (row > 0)  {
 			neighbors.add(getField(row - 1, col)); //top
 		}
-		if (row < DIM - 1) {
+		if (row < dimension - 1) {
 			neighbors.add(getField(row + 1, col)); //down
 		}
 		if (col > 0) {
 			neighbors.add(getField(row, col - 1)); //left
 		}
-		if (col < DIM - 1) {
+		if (col < dimension - 1) {
 			neighbors.add(getField(row, col + 1)); //right
 		}
 		return neighbors;	
@@ -290,13 +300,13 @@ public class Board {
 		if (row > 0)  {
 			neighbors.add(index(row - 1, col)); //top
 		}
-		if (row < DIM - 1) {
+		if (row < dimension - 1) {
 			neighbors.add(index(row + 1, col)); //down
 		}
 		if (col > 0) {
 			neighbors.add(index(row, col - 1)); //left
 		}
-		if (col < DIM - 1) {
+		if (col < dimension - 1) {
 			neighbors.add(index(row, col + 1)); //right
 		}
 		return neighbors;	
@@ -411,13 +421,13 @@ public class Board {
 		if (row > 0)  {
 			neighbors.put(index(row - 1, col), getField(row - 1, col)); //top
 		}
-		if (row < DIM - 1) {
+		if (row < dimension - 1) {
 			neighbors.put(index(row + 1, col), getField(row + 1, col)); //down
 		}
 		if (col > 0) {
 			neighbors.put(index(row, col - 1), getField(row, col - 1)); //left
 		}
-		if (col < DIM - 1) {
+		if (col < dimension - 1) {
 			neighbors.put(index(row, col + 1), getField(row, col + 1)); //right
 		}
 		return neighbors;	
@@ -499,9 +509,9 @@ public class Board {
 	 */
 	public String toString() {
 		String board = "   0   1   2   3   4" + "\n";
-		for (int i = 0; i < DIM; i++) {
+		for (int i = 0; i < dimension; i++) {
 			String row = "" + i + "";
-			for (int j = 0; j < DIM; j++) {
+			for (int j = 0; j < dimension; j++) {
 				row = row + " " + getField(i, j).toString() + " ";
 				// alle velden van 1 rij
 			}
@@ -514,19 +524,23 @@ public class Board {
 	//opslaan van de array die het board vormt
 	
 	public boolean isPreviousBoard(Board nextBoard) {
-		for (Board previous : previousBoards) {
-			if (nextBoard.equals(previous)) {
-				return true;
-			}
-			// to do bijhouden wat de verschillende borden waren en hier doorheen itereren
-			// bij elke beurt copy maken en deze opslaan.
-		}
-		return false;
+//		for (Board previous : previousBoards) {
+//			if (nextBoard.equals(previous)) {
+//				return true;
+//			}
+//			// to do bijhouden wat de verschillende borden waren en hier doorheen itereren
+//			// bij elke beurt copy maken en deze opslaan.
+//		}
+//		return false;
+		return true;
 	}
 	
 	public static void main(String[] args) {
-		Board board = new Board();
-		System.out.print(board.toString());
+		Board board = new Board(12);
+//		board.setDIM(12);
+//		board.boardInit();
+		System.out.println(board.getDIM());
+//		System.out.print(board.toString());
 		board.setField(4, 4, Stone.b);
 		board.setField(3, 4, Stone.b);
 		board.setField(6, 6, Stone.w);

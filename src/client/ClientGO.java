@@ -17,6 +17,7 @@ public class ClientGO {
 	 * When the argument length does not match
 	 */
 	public static void main(String[] args) {
+	
 		//exit if the arguments do not match
 		if (args.length != 3) {
 			System.out.println(USAGE);
@@ -56,13 +57,15 @@ public class ClientGO {
         }
 	
         System.out.println("the socked is open");
+        
+        System.out.println("wordt dit ook uitgeprint");
 	
         //communicatieObject aanmaken. In dit geval een ClientController
         // create Peer object and start the two-way communication
         try {
             PlayerController client = new PlayerController(name, sock);
            
-            Thread serverInputHandler = new Thread(client);
+            Thread serverInputHandler = new Thread(client);//kan korter.
             serverInputHandler.start(); //run method regelt de inputstream die komt vanaf de server
           
             //TerminalInput
@@ -78,6 +81,7 @@ public class ClientGO {
             e.printStackTrace();
         }
     
+        
       
 	} //main
 }

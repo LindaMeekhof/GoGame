@@ -16,8 +16,9 @@ import general.Protocol.General;
 import general.Protocol.Server;
 import servermodel.Board;
 
-public class PlayerController extends Protocol implements Runnable {
+public class PlayerController extends Protocol implements Runnable{
 
+	
 	/**
 	 * Handles the input from the Server and input from the console.
 	 */
@@ -87,7 +88,7 @@ public class PlayerController extends Protocol implements Runnable {
 		try {
 			while (in.readLine() != null) {
 				line = in.readLine();
-				System.out.println(line + "1");
+				System.out.println(line);
 				try {
 					Thread.sleep(100);
 				} catch (InterruptedException e) {
@@ -95,23 +96,21 @@ public class PlayerController extends Protocol implements Runnable {
 					e.printStackTrace();
 				}
 				String[] words = line.split("\\" + General.DELIMITER1);
-				// getting information about name versionnumber and 
-				// extension of the server and sending client data back.
-//				Boolean running = true;
-//				if (running) {
-//					System.out.println(line + "2");
-//				//	sendMessage("de versie is ontvangen");
-//				}
-				//getting name and serverversion
+// -----------------------------------------------------------------
+//getting and sending name and server version
 				if (words[0].equals(Server.NAME)) {
+					String inputNew = line.replaceAll("\\" + General.DELIMITER1, " ");
+					System.out.println(inputNew);
 					System.out.println("name and version are read");
-					
+
 					sendMessage(Client.NAME + General.DELIMITER1 + getName() + 
-							General.DELIMITER1 + Client.VERSION + General.DELIMITER1 + Client.VERSIONNO 
-							+ General.DELIMITER1 + Client.EXTENSIONS + 0 + General.DELIMITER1 + 0 + 
+							General.DELIMITER1 + Client.VERSION + General.DELIMITER1 + 
+							Client.VERSIONNO + General.DELIMITER1 + Client.EXTENSIONS + 0 + General.DELIMITER1 + 0 + 
 							General.DELIMITER1 + 0 + General.DELIMITER1 + 0 + General.DELIMITER1 + 0 + 
 							General.DELIMITER1 + 0 + General.DELIMITER1 + 0);
 				}
+//----------------------------------------------------------------------
+//getting Start and sending Settings
 //				if (words[0].equals(Server.START)) {
 //					System.out.println("settings are asked");
 //					String input = readStringConsole("Please enter you Settings");

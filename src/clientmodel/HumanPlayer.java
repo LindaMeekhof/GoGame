@@ -84,9 +84,9 @@ public class HumanPlayer extends Player {
 
 
 	public static void main(String[] args) {
-		HumanPlayer player = new HumanPlayer("Linda", Stone.b);
-		HumanPlayer player2 = new HumanPlayer("Linda", Stone.w);
-		Board board = new Board();
+		HumanPlayer player = new HumanPlayer();
+		HumanPlayer player2 = new HumanPlayer();
+	//	Board board = new Board();
 		
 //		String testing = player.determineMove(board);
 //		System.out.println(testing);
@@ -97,12 +97,12 @@ public class HumanPlayer extends Player {
 	//	String testing2 = player.determineMove(board);
 	//	System.out.println(testing2);
 		
-		player.makeMove(board);
-		Stone stone = board.getField(1, 1);
-		System.out.println(stone);
-		player2.makeMove(board);
-		Stone stone2 = board.getField(1, 2);
-		System.out.println(stone2);
+//		player.makeMove(board);
+//		Stone stone = board.getField(1, 1);
+//		System.out.println(stone);
+//		player2.makeMove(board);
+//		Stone stone2 = board.getField(1, 2);
+//		System.out.println(stone2);
 	}
 
 } //class

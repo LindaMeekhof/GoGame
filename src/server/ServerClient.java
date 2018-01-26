@@ -10,7 +10,7 @@ import java.net.Socket;
 import general.Protocol;
 import servermodel.Stone;
 
-public class Serverclient extends Thread {
+public class ServerClient extends Thread {
 	
 	private BufferedReader in;
 	private BufferedWriter out;
@@ -18,18 +18,23 @@ public class Serverclient extends Thread {
 	private Socket sock;
 	private Gamecontroller gamecontroller;
 	private Stone stone;
-
+	private int identiteit;
+	private boolean isTurn;
+	
 	/**
 	 * Constructs a Serverclient.
 	 * @param playername
 	 * @param sockArg
 	 * @throws IOException
 	 */
-	public Serverclient(ServerGO serverArgument, Socket sockArgument) throws IOException {
+	public ServerClient(ServerGO serverArgument, Socket sockArgument, int identiteit) throws IOException {
+		this.identiteit = identiteit;
 		this.server = serverArgument;
 		this.sock = sockArgument; 
 		in = new BufferedReader(new InputStreamReader(sockArgument.getInputStream()));
 		out = new BufferedWriter(new OutputStreamWriter(sockArgument.getOutputStream()));
+		
+		isTurn = false;
 	}
 
 	private String line;
@@ -44,7 +49,7 @@ public class Serverclient extends Thread {
 			while (in.readLine() != null) {
 				line = in.readLine();
 				//System.out.println(line);
-				gamecontroller.notify(line);
+				gamecontroller.notify(line, identiteit);
 			} 
 			shutdown();
 		} catch (IOException e) {
@@ -103,5 +108,22 @@ public class Serverclient extends Thread {
 		}
 		return null;
 	}
+
+	public boolean isTurn() {
+		return isTurn;
+	}
+
+	public void setTurn(boolean isTurn) {
+		this.isTurn = isTurn;
+	}
+	
+//	public void isTurnSwitch() {
+//		if (isTurn == true) {
+//			isTurn = false;
+//		} else {
+//			isTurn = true;
+//		}
+//	}
+	
 	
 }
