@@ -1,14 +1,13 @@
 package server;
 
-import java.io.BufferedWriter;
+
 import java.io.IOException;
-import java.io.OutputStreamWriter;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.ArrayList;
 
 
-public class ServerGO extends Thread{
+public class ServerGO extends Thread {
 	private static final String USEINPUT = "The server needs: " + "<name><port>";
 
 /** Starts a server-application.
@@ -46,15 +45,16 @@ public class ServerGO extends Thread{
 		
 	}
 	
-	private int identiteit;
+	private int clientnumber;
 	private int port;
+	private String serverName;
 	private ArrayList<ServerClient> availableServerClient;
 	private ArrayList<Gamecontroller> gamethreads;
 	
 	/** Constructs a new Server object. */
 	public ServerGO(int portArg, String serverName) {
 		this.port = portArg;
-		this.serverName = serverName;
+		this.serverName = "LindaServer";
 		this.availableServerClient = new ArrayList<ServerClient>();
 		this.gamethreads = new ArrayList<Gamecontroller>(); //kan nog niks toevoegen en weghalen.
 	}
@@ -65,21 +65,23 @@ public class ServerGO extends Thread{
 	//bij twee spelers moet er ook een Gamecontroller thread worden aangemaakt.
 	public void run() { 
 		try (ServerSocket ssock = new ServerSocket(port);) {
-			
+			int clientIdentity = 0;
 			while (true) { 
-
+				
 				Socket sock = ssock.accept();
-				System.out.println("New client connected!"); 
-				identiteit += 1;
-				ServerClient client = new ServerClient(this, sock, identiteit);
+				
+				print("New client connected!"); 
+				print("clientnumber " + (clientIdentity++) + "is connected");
+				ServerClient client = new ServerClient(this, sock, clientIdentity);
 				client.start();
 				addServerclient(client);
 				
+			
 				if (availableServerClient.size() == 2) {
 					Thread t1 = new Thread(new Gamecontroller(this, availableServerClient.get(0), availableServerClient.get(1)));
 					t1.start();
 				}
-				System.out.println(availableServerClient);
+				//System.out.println(availableServerClient);
 				
 			} 
 		} catch (IOException e) {
@@ -90,6 +92,16 @@ public class ServerGO extends Thread{
 		
  
 	
+	public String getServerName() {
+		return serverName;
+	}
+
+	//niet nodig?
+	public void setServerName(String serverName) {
+		this.serverName = serverName;
+	}
+
+
 	public void addServerclient(ServerClient client) {
 		availableServerClient.add(client);
 	}
@@ -99,12 +111,13 @@ public class ServerGO extends Thread{
 		availableServerClient.remove(client);
 	}
 	
+	
+	public void print(String message) { 
+		System.out.println(message);
+	}
+
 
 	
-	private String serverName; 
-	
-//	public String getName() {
-//		return serverName;
-//	}
+
 	
 }

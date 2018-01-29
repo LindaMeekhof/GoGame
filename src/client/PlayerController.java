@@ -8,7 +8,7 @@ import java.io.OutputStreamWriter;
 import java.net.Socket;
 import java.util.Scanner;
 
-import clientmodel.HumanPlayer;
+
 import clientmodel.Player;
 import general.Protocol;
 import general.Protocol.Client;
@@ -16,7 +16,7 @@ import general.Protocol.General;
 import general.Protocol.Server;
 import servermodel.Board;
 
-public class PlayerController extends Protocol implements Runnable{
+public class PlayerController extends Protocol implements Runnable { 
 
 	
 	/**
@@ -27,27 +27,38 @@ public class PlayerController extends Protocol implements Runnable{
 	private Socket sock;
 	private String namePlayer; //name of the Player
 	private Player player;
+	private Board board;
+	
+	
 
-	
-	
+
 	/**
 	 * Constructor creates a ClientController.
 	 */
-	public PlayerController(String playerName, Socket sockArg) throws IOException {
+	public PlayerController(String playerName, Socket sockArg, Player player) throws IOException {
 		this.namePlayer = playerName;
 		this.sock = sockArg;
 		in = new BufferedReader(new InputStreamReader(sock.getInputStream())); 
 		out = new BufferedWriter(new OutputStreamWriter(sock.getOutputStream()));
-		player = new HumanPlayer();
-		//board = new Board(); //dit moet straks heet bord worden van de client
+		this.player = player; 
+	//	board = new Board(); //dit moet straks heet bord worden van de client
 	}
-	
+
+// Getters and setters ---------------------------------------------------------------
 	/**
 	 * Get the name of the player.
 	 * @return name name of player.
 	 */
 	public String getName() {
 		return namePlayer;
+	}
+	
+	public Player getPlayer() {
+		return player;
+	}
+
+	public void setPlayer(Player player) {
+		this.player = player;
 	}
 
 
@@ -69,13 +80,50 @@ public class PlayerController extends Protocol implements Runnable{
 					value = scannerLine.nextLine();
 					//System.out.println(value); //output terminal
 					//sends a message directly to out.
-					sendMessage(value);
-				//	sendMessage("testing");
+					String[] inputConsole = value.split(" ");
+					String commando = inputConsole[0].toUpperCase();
+
+					switch (commando) {
+						//ook nog checken op validmove
+						case Client.MOVE:
+							if (isInteger(inputConsole[1]) && isInteger(inputConsole[2])) {
+								sendMessage(Client.MOVE + General.DELIMITER1 + inputConsole[1] + General.DELIMITER2 + inputConsole[2]);
+							} else if (inputConsole[1].equals("PASS")){
+								sendMessage(Client.MOVE + General.DELIMITER1 + Client.PASS);
+							} else {
+								print("Please enter a valid move");
+							}
+							break;
+						case Client.SETTINGS:
+							if (inputConsole.length == 3 && isColor(inputConsole[1]) && isInteger(inputConsole[2])) {
+								sendMessage(Client.SETTINGS + General.DELIMITER1 + inputConsole[1].toUpperCase() + General.DELIMITER1 + inputConsole[2]);
+							} else {
+								print("please enter valid settings");
+							}
+							//System.out.println("settings" + value); 
+							break;
+						case Client.QUIT:
+							sendMessage(commando);
+							System.out.println(commando);
+							shutdown();
+							break;
+						case Client.REQUESTGAME:
+							sendMessage(commando);
+							break;
+						case Client.CHAT:
+							sendMessage(Client.CHAT + General.DELIMITER1 + value);
+							break;
+						default:
+							System.out.println("unknown input"); break;
+					}
+
+
+					//	sendMessage(value);
+
 				}
 			}
 		} 
 		return value;
-
 	}
 
 	/**
@@ -96,52 +144,68 @@ public class PlayerController extends Protocol implements Runnable{
 					e.printStackTrace();
 				}
 				String[] words = line.split("\\" + General.DELIMITER1);
+				String readableInput = line.replaceAll("\\" + General.DELIMITER1, " ");
 // -----------------------------------------------------------------
 //getting and sending name and server version
 				if (words[0].equals(Server.NAME)) {
-					String inputNew = line.replaceAll("\\" + General.DELIMITER1, " ");
-					System.out.println(inputNew);
-					System.out.println("name and version are read");
-
-					sendMessage(Client.NAME + General.DELIMITER1 + getName() + 
-							General.DELIMITER1 + Client.VERSION + General.DELIMITER1 + 
-							Client.VERSIONNO + General.DELIMITER1 + Client.EXTENSIONS + 0 + General.DELIMITER1 + 0 + 
-							General.DELIMITER1 + 0 + General.DELIMITER1 + 0 + General.DELIMITER1 + 0 + 
-							General.DELIMITER1 + 0 + General.DELIMITER1 + 0);
+					print(readableInput);
+//					sendMessage(Client.NAME + General.DELIMITER1 + getName() + 
+//							General.DELIMITER1 + Client.VERSION + General.DELIMITER1 + 
+//							Client.VERSIONNO + General.DELIMITER1 + Client.EXTENSIONS + General.DELIMITER1 + 0 + General.DELIMITER1 + 0 + 
+//							General.DELIMITER1 + 0 + General.DELIMITER1 + 0 + General.DELIMITER1 + 0 + 
+//							General.DELIMITER1 + 0 + General.DELIMITER1 + 0);
+					sendMessage(Client.NAME + General.DELIMITER1 + getName());
 				}
 //----------------------------------------------------------------------
-//getting Start and sending Settings
-//				if (words[0].equals(Server.START)) {
-//					System.out.println("settings are asked");
-//					String input = readStringConsole("Please enter you Settings");
-//					System.out.println(input);
-//			//		sendMessage(Client.SETTINGS + settings[0] + General.DELIMITER1 + settings[1]);
-//				}
-//				
-//				//Start game; voorkeur bord doorgeven
-//				if (words.length == 12 && words[0].equals(Server.START)) {
-//					print(words[0]);
-//					String input = readStringConsole("Choice color and boardsize");
-//					String[] settings = input.split(" ");
-//					sendMessage(Client.SETTINGS + settings[0] + General.DELIMITER1 + settings[1]);
-//				}
-			}
+// Getting Start and sending Settings
+				if (words[0].equals(Server.START)) {	
+					print("Please enter you settings -> SETTINGS <color> <bordsize>");
+				}
+			
+//------------------------------------------------------------------------				
+// command turn for making a move	
+				if (words[0].equals(Server.TURN)) {
+					print(readableInput);
+				}
+//------------------------------------------------------------------------
+// the game is ended
+				if (words[0].equals(Server.ERROR)) {
+					print(readableInput);
+				}
+// error commands
+				if (words[0].equals(Server.UNKNOWN)) {
+					print(readableInput);
+				}
+				if (words[0].equals(Server.INVALID)) {
+					print(readableInput);
+				}
+				if (words[0].equals(Server.NAMETAKEN)) {
+					print(readableInput);
+				}
+				if (words[0].equals(Server.INCOMPATIBLEPROTOCOL)) {
+					print(readableInput);
+				}
+				if (words[0].equals(Server.OTHER)) {
+					print(readableInput);
+				}
+			} //run
 		} catch (IOException e) {
 			// System.out.println(" tekst");
 			e.printStackTrace();
 		}
 	}
 				
-
-	
-		
-	private boolean containsEuroteken(String userInput) {
-		return userInput.contains(Protocol.General.DELIMITER1); 
+	public Boolean isColor(String expectedColor) {
+		return expectedColor.equalsIgnoreCase("WHITE") || expectedColor.equalsIgnoreCase("BLACK");
 	}
 	
-	private boolean containsOneUnderscore(String userInput) {
-		return userInput.contains(Protocol.General.DELIMITER2); 
-	}
+//	private boolean containsEuroteken(String userInput) {
+//		return userInput.contains(Protocol.General.DELIMITER1); 
+//	}
+	
+//	private boolean containsOneUnderscore(String userInput) {
+//		return userInput.contains(Protocol.General.DELIMITER2); 
+//	}
 	
 	/**
 	 * This checks if the user input contains to integer.
@@ -157,6 +221,20 @@ public class PlayerController extends Protocol implements Runnable{
 		}
 	}
 	
+	/**
+	 * Shutdown the client.
+	 */
+	public void shutdown() {
+		try {
+			in.close();
+			out.close();
+			sock.close();
+		} catch (IOException e) {
+		}
+	}
+	
+// ------------------------------------------------------------
+// input and output
 	/**
 	 * Send the message to the server.
 	 * @param message
@@ -180,27 +258,14 @@ public class PlayerController extends Protocol implements Runnable{
 		System.out.println(message);
 	}
 	
-	/**
-	 * Shutdown the client.
-	 */
-	public void shutdown() {
-		try {
-			in.close();
-			out.close();
-			sock.close();
-		} catch (IOException e) {
-			System.out.println("Error with shutting down");
-		}
-	}
 	
 
-	 
-	//Thread t1 = new Thread(new Runner());
-	public void main(String[] args) throws IOException {
-		PlayerController controller = new PlayerController("Linda", sock);
-		controller.readStringConsole("Read string");
-	}
 	
+// main --------------------------------------------------------------
+
+
+
 	
+
 	
-} //class
+} 

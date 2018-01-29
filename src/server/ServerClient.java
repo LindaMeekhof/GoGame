@@ -8,6 +8,7 @@ import java.io.OutputStreamWriter;
 import java.net.Socket;
 
 import general.Protocol;
+import general.Protocol.General;
 import servermodel.Stone;
 
 public class ServerClient extends Thread {
@@ -18,8 +19,15 @@ public class ServerClient extends Thread {
 	private Socket sock;
 	private Gamecontroller gamecontroller;
 	private Stone stone;
-	private int identiteit;
-	private boolean isTurn;
+	private String clientTag;
+	private String namePlayer;
+	private String stoneColorString;
+
+	
+
+	private Boolean isTurn;
+
+	
 	
 	/**
 	 * Constructs a Serverclient.
@@ -27,8 +35,8 @@ public class ServerClient extends Thread {
 	 * @param sockArg
 	 * @throws IOException
 	 */
-	public ServerClient(ServerGO serverArgument, Socket sockArgument, int identiteit) throws IOException {
-		this.identiteit = identiteit;
+	public ServerClient(ServerGO serverArgument, Socket sockArgument, int identityNumber) throws IOException {
+		this.clientTag = Integer.toString(identityNumber);
 		this.server = serverArgument;
 		this.sock = sockArgument; 
 		in = new BufferedReader(new InputStreamReader(sockArgument.getInputStream()));
@@ -38,49 +46,32 @@ public class ServerClient extends Thread {
 	}
 
 	private String line;
-	/**
-	 * Handle the clientInput which comes through the Socket.
-	 */
-	@Override
-	public void run() {
-		//String line;
-		try { 
-			// String line;
-			while (in.readLine() != null) {
-				line = in.readLine();
-				//System.out.println(line);
-				gamecontroller.notify(line, identiteit);
-			} 
-			shutdown();
-		} catch (IOException e) {
-			System.out.println("No line was read"); 
-		}
+	
+	// Getters and setters --------------------------------------------------
+	
+	public String getNamePlayer() {
+		return namePlayer;
 	}
+
+
+	public void setNamePlayer(String namePlayer) {
+		this.namePlayer = namePlayer;
+	}
+	
+	public String getClientTag() {
+		return clientTag;
+	}
+
 	
 //	returns the line which comes from the player.
 	public String inputPlayer() {
 		return line;
 	}
 	
-	/** 
-	 * Send gameData to the clients. 
-	 */
-	public void sentGameData(String message) {
-		try {
-			out.newLine();
-			out.write(message);
-			out.newLine();
-			out.flush();
-		} catch (IOException e) {
-			System.out.println("Error with sending data to the client");
-			//remove this Serverclient of the list from Serverclients in the server.
-			//server.removeServerclient(this);
-		}
-	}
-
-	private void shutdown() {
-		server.removeServerclient(this);
-		System.out.println("removed this serverclient");
+	
+	//nog niet gebruikt
+	public void setTurn(boolean isTurn) {
+		this.isTurn = isTurn;
 	}
 	
 	public void setGamecontroller(Gamecontroller gamecontroller) {
@@ -99,31 +90,71 @@ public class ServerClient extends Thread {
 		return stone;
 	}
 	
-	public String getStoneString() {
-		if (stone.equals(Stone.b)) {
-			return "BLACK";
-		}
-		if (stone.equals(Stone.w)) {
-			return "WHITE";
-		}
-		return null;
+	public String getStoneColorString() {
+		return stoneColorString;
 	}
 
+
+	public void setStoneColorString(String stoneColorString) {
+		this.stoneColorString = stoneColorString;
+	}
+//	public String getStoneString() {
+//		if (stone.equals(Stone.b)) {
+//			return "BLACK";
+//		}
+//		if (stone.equals(Stone.w)) {
+//			return "WHITE";
+//		}
+//		return null;
+//	}
+	
+	// InputStream client ----------------------------------------------------
+	/**
+	 * Handle the clientInput which comes through the Socket.
+	 */
+	@Override
+	public void run() {
+		//String line;
+		try { 
+			// String line;
+			while (in.readLine() != null) {
+				line = in.readLine();
+				//System.out.println(line);
+				gamecontroller.notify(clientTag + General.DELIMITER1 + line);
+			} 
+			shutdown();
+		} catch (IOException e) {
+			System.out.println("No line was read"); 
+		}
+	}
+	
+
+	// Outputstream client -----------------------------------------------------
+	/** 
+	 * Send gameData to the clients. 
+	 */
+	public void sentGameData(String message) {
+		try {
+			out.newLine();
+			out.write(message);
+			out.newLine();
+			out.flush();
+		} catch (IOException e) {
+			System.out.println("Error with sending data to the client");
+			//remove this Serverclient of the list from Serverclients in the server.
+			//server.removeServerclient(this);
+		}
+	}
+
+	// Methods Serverclient -------------------------------------------------------
+	
+	private void shutdown() {
+		server.removeServerclient(this);
+		System.out.println("removed this serverclient");
+	}
+	
 	public boolean isTurn() {
 		return isTurn;
 	}
-
-	public void setTurn(boolean isTurn) {
-		this.isTurn = isTurn;
-	}
-	
-//	public void isTurnSwitch() {
-//		if (isTurn == true) {
-//			isTurn = false;
-//		} else {
-//			isTurn = true;
-//		}
-//	}
-	
 	
 }

@@ -5,8 +5,8 @@ import servermodel.Stone;
 
 public class ComputerPlayer extends Player {
 
-	public ComputerPlayer(String name, Stone stone) {
-		super(name, stone);
+	public ComputerPlayer(String name) {
+		super(name);
 	}
 
 	/**

@@ -1,5 +1,6 @@
 package servermodel;
 
+import java.lang.reflect.Array;
 import java.util.Scanner;
 
 import clientmodel.Player;
@@ -77,16 +78,16 @@ public class GOGame {
 	/**
 	 * This prints the results when a game is ended. This can be a draw.
 	 */
-	private void printResult() {
-		if (board.hasWinner()) {
-			if (board.isWinner(players[0].getStone())) {
-				System.out.println("Player " + players[0].getName());
-			} else if (board.isWinner(players[1].getStone())) {
-				System.out.println("Player " + players[1].getName());
-			} else {
-				System.out.println("This is a draw. There is no winner");
-			}
+	private array[] printResult() {
+		Array[] endResult = new Array[];
+		if (board.isWinner(players[0].getStone())) {
+			return players[0].getName();
+		} else if (board.isWinner(players[1].getStone())) {
+			return players[1].getName();
+		} else {
+			return "This is a draw. There is no winner";
 		}
 	}
+	
 	
 }

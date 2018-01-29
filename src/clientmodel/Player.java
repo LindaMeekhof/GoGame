@@ -1,5 +1,7 @@
 package clientmodel;
 
+import java.io.IOException;
+
 import servermodel.Board;
 import servermodel.Stone;
 
@@ -21,8 +23,8 @@ public abstract class Player {
 	 * Creates a player for the game GO. 
 	 * This constructor has the parameter name and stone colour.
 	 */
-	public Player() {
-		this.stone = stone;
+	public Player(String name) {
+		this.name = name;
 	}
 
 	/**
@@ -101,7 +103,7 @@ public abstract class Player {
 		String myChoice = determineMove(board);
 		
 		//beetje dubbelop
-		String[] words = myChoice.split("_");
+		String[] words = myChoice.split(" ");
 		int row = Integer.parseInt(words[0]);
 		int col = Integer.parseInt(words[1]);
 		board.setField(row, col, getStone());
@@ -109,6 +111,7 @@ public abstract class Player {
 		//choice wordt gestuurd naar server
 		//makeMoveToServer(board);
 	}
+	
 	
 //	public String makeMoveToServer(Board board) {
 //		String myChoice = determineMove(board);
