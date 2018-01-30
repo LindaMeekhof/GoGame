@@ -23,7 +23,9 @@ public class ServerGO extends Thread {
 		String name = args[0]; //sets the name of the server, not necessary
 		int port = 0;
 		
-		//pars args[1] which is the portnumber. Check if the argument is a number.
+		/**
+		 * pars args[1] which is the portnumber. Check if the argument is a number.
+		 */
 		try {
 			port = Integer.parseInt(args[1]);
 		} catch (NumberFormatException e) { //if not a number
@@ -49,20 +51,21 @@ public class ServerGO extends Thread {
 	private int port;
 	private String serverName;
 	private ArrayList<ServerClient> availableServerClient;
-	private ArrayList<Gamecontroller> gamethreads;
+//	private ArrayList<Gamecontroller> gamethreads;
 	
 	/** Constructs a new Server object. */
 	public ServerGO(int portArg, String serverName) {
 		this.port = portArg;
 		this.serverName = "LindaServer";
 		this.availableServerClient = new ArrayList<ServerClient>();
-		this.gamethreads = new ArrayList<Gamecontroller>(); //kan nog niks toevoegen en weghalen.
+//		this.gamethreads = new ArrayList<Gamecontroller>(); 
 	}
 	
-	
-	//Create a ServerClient threads which handles the communication with the client.
-	//in new thread omdat de server moet blijven reageren op andere spelers die binnenkomen.
-	//bij twee spelers moet er ook een Gamecontroller thread worden aangemaakt.
+	/**
+	 * Create a ServerClient threads which handles the communication with the client.
+	 * in new thread omdat de server moet blijven reageren op andere spelers die binnenkomen.
+	 * bij twee spelers moet er ook een Gamecontroller thread worden aangemaakt.
+	 */
 	public void run() { 
 		try (ServerSocket ssock = new ServerSocket(port);) {
 			int clientIdentity = 0;
@@ -78,7 +81,8 @@ public class ServerGO extends Thread {
 				
 			
 				if (availableServerClient.size() == 2) {
-					Thread t1 = new Thread(new Gamecontroller(this, availableServerClient.get(0), availableServerClient.get(1)));
+					Thread t1 = new Thread(new Gamecontroller(this, availableServerClient.get(0), 
+							availableServerClient.get(1)));
 					t1.start();
 				}
 				//System.out.println(availableServerClient);
@@ -91,27 +95,40 @@ public class ServerGO extends Thread {
 	}
 		
  
-	
+// Getters and setters ---------------------------------------------------	
+	/**
+	 * This method returns the serverName.
+	 * @return
+	 */
 	public String getServerName() {
 		return serverName;
 	}
 
-	//niet nodig?
-	public void setServerName(String serverName) {
-		this.serverName = serverName;
-	}
 
+//	public void setServerName(String serverName) {
+//		this.serverName = serverName;
+//	}
 
+	/**
+	 * Adds a ServerClient to the list availableServerClient.
+	 * @param client
+	 */
 	public void addServerclient(ServerClient client) {
 		availableServerClient.add(client);
 	}
 	
-	// wanneer de client niet meer reageert
+	/**
+	 * Removes the ServerClient from the list of availableClients.
+	 * @param client
+	 */
 	public  void removeServerclient(ServerClient client) {
 		availableServerClient.remove(client);
 	}
 	
-	
+	/**
+	 * Print out a message.
+	 * @param message
+	 */
 	public void print(String message) { 
 		System.out.println(message);
 	}

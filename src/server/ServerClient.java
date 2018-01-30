@@ -7,7 +7,6 @@ import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
 import java.net.Socket;
 
-import general.Protocol;
 import general.Protocol.General;
 import servermodel.Stone;
 
@@ -26,8 +25,7 @@ public class ServerClient extends Thread {
 	
 
 	private Boolean isTurn;
-
-	
+//	private String line;
 	
 	/**
 	 * Constructs a Serverclient.
@@ -45,39 +43,70 @@ public class ServerClient extends Thread {
 		isTurn = false;
 	}
 
-	private String line;
+	
 	
 	// Getters and setters --------------------------------------------------
 	
+	/**
+	 * Get the name of the player. 
+	 * @return
+	 */
 	public String getNamePlayer() {
 		return namePlayer;
 	}
 
-
+	/**
+	 * Set the name of the player.This comes from the client.
+	 * @param namePlayer
+	 */
 	public void setNamePlayer(String namePlayer) {
 		this.namePlayer = namePlayer;
 	}
 	
+	/**
+	 * Get the clientTag. The clientTag is used for separating the messages.
+	 * @return
+	 */
 	public String getClientTag() {
 		return clientTag;
 	}
 
 	
 //	returns the line which comes from the player.
-	public String inputPlayer() {
-		return line;
-	}
+//	public String inputPlayer() {
+//		return line;
+//	}
 	
 	
-	//nog niet gebruikt
+	/**
+	 * setTurn boolen. Deze is nog niet gebruikt
+	 * @param isTurn
+	 */
 	public void setTurn(boolean isTurn) {
 		this.isTurn = isTurn;
 	}
 	
+	/**
+	 * set the gamGamecontroller.
+	 * @param gamecontroller
+	 */
 	public void setGamecontroller(Gamecontroller gamecontroller) {
 		this.gamecontroller = gamecontroller;
 	}
 	
+
+	/**
+	 * Get the stone (Stone.w or stone.b) of this ServerClient.
+	 * @return
+	 */
+	public Stone getStone() {
+		return stone;
+	}
+	
+	/**
+	 * Get the stone (Stone.w or stone.b) of this ServerClient.
+	 * @param colour
+	 */
 	public void setStone(String colour) {
 		if (colour.equalsIgnoreCase("BLACK")) {
 			stone = Stone.b;
@@ -86,18 +115,22 @@ public class ServerClient extends Thread {
 		}
 	}
 	
-	public Stone getStone() {
-		return stone;
-	}
-	
+	/**
+	 * Get stone in String format: WHITE or BLACK.
+	 * @return
+	 */
 	public String getStoneColorString() {
 		return stoneColorString;
 	}
 
-
+	/**
+	 * Set stone in String format for this ServerClient.
+	 * @param stoneColorString
+	 */
 	public void setStoneColorString(String stoneColorString) {
 		this.stoneColorString = stoneColorString;
 	}
+	
 //	public String getStoneString() {
 //		if (stone.equals(Stone.b)) {
 //			return "BLACK";
@@ -109,6 +142,32 @@ public class ServerClient extends Thread {
 //	}
 	
 	// InputStream client ----------------------------------------------------
+//	/**
+//	 * Handle the clientInput which comes through the Socket.
+//	 */
+//	@Override
+//	public void run() {
+//		//String line;
+//		try { 
+//			// String line;
+//			while (in.readLine() != null) {
+//				line = in.readLine();
+//				//System.out.println(line);
+//				String[] words = line.split("\\" + General.DELIMITER1);
+////				if (words[0].equals("EXIT")) {
+////					shutdown();
+////				} 
+////				else {
+////					gamecontroller.notify(clientTag + General.DELIMITER1 + line);
+////				}
+//				gamecontroller.notify(clientTag + General.DELIMITER1 + line);
+//			} 
+//			shutdown();
+//		} catch (IOException e) {
+//			System.out.println("No line was read"); 
+//		}
+//	}
+	
 	/**
 	 * Handle the clientInput which comes through the Socket.
 	 */
@@ -116,10 +175,17 @@ public class ServerClient extends Thread {
 	public void run() {
 		//String line;
 		try { 
-			// String line;
+			String line;
 			while (in.readLine() != null) {
 				line = in.readLine();
 				//System.out.println(line);
+//				String[] words = line.split("\\" + General.DELIMITER1);
+//				if (words[0].equals("EXIT")) {
+//					shutdown();
+//				} 
+//				else {
+//					gamecontroller.notify(clientTag + General.DELIMITER1 + line);
+//				}
 				gamecontroller.notify(clientTag + General.DELIMITER1 + line);
 			} 
 			shutdown();
@@ -148,13 +214,10 @@ public class ServerClient extends Thread {
 
 	// Methods Serverclient -------------------------------------------------------
 	
-	private void shutdown() {
+	public void shutdown() {
 		server.removeServerclient(this);
+		// server stop.
 		System.out.println("removed this serverclient");
-	}
-	
-	public boolean isTurn() {
-		return isTurn;
 	}
 	
 }

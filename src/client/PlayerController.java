@@ -158,7 +158,7 @@ public class PlayerController implements Runnable {
 		try {
 			while (in.readLine() != null) {
 				line = in.readLine();
-			//	System.out.println(line);
+				//	System.out.println(line);
 				try {
 					Thread.sleep(100);
 				} catch (InterruptedException e) {
@@ -167,58 +167,65 @@ public class PlayerController implements Runnable {
 				}
 				String[] words = line.split("\\" + General.DELIMITER1);
 				String readableInput = line.replaceAll("\\" + General.DELIMITER1, " ");
-// -----------------------------------------------------------------
-//getting and sending name and server version
+				// -----------------------------------------------------------------
+				//getting and sending name and server version
 				if (words[0].equals(Server.NAME)) {
+					System.out.println(namePlayer);
 					view.print(readableInput);
-//					sendMessage(Client.NAME + General.DELIMITER1 + getName() + 
-//							General.DELIMITER1 + Client.VERSION + General.DELIMITER1 + 
-//							Client.VERSIONNO + General.DELIMITER1 + Client.EXTENSIONS + General.DELIMITER1 + 0 + General.DELIMITER1 + 0 + 
-//							General.DELIMITER1 + 0 + General.DELIMITER1 + 0 + General.DELIMITER1 + 0 + 
-//							General.DELIMITER1 + 0 + General.DELIMITER1 + 0);
-					sendMessage(Client.NAME + General.DELIMITER1 + getName());
+					sendMessage(Client.NAME + General.DELIMITER1 + getName() + 
+							General.DELIMITER1 + Client.VERSION + General.DELIMITER1 + 
+							Client.VERSIONNO + General.DELIMITER1 + Client.EXTENSIONS + 
+							General.DELIMITER1 + 0 + General.DELIMITER1 + 0 + 
+							General.DELIMITER1 + 0 + General.DELIMITER1 + 
+							0 + General.DELIMITER1 + 0 + General.DELIMITER1 + 
+							0 + General.DELIMITER1 + 0);
+					//	sendMessage(Client.NAME + General.DELIMITER1 + getName());
 				}
-//----------------------------------------------------------------------
-// Getting Start and sending Settings
-				if (words.length == 6 && words[0].equals(Server.START)) {	
+				//----------------------------------------------------------------------
+				// Getting Start and sending Settings
+				else if (words.length == 6 && words[0].equals(Server.START)) {	
 					view.print("this are the final settings");
 					view.print(readableInput);
-				// START 2 WHITE 12 name name
+					// Step 1. update ClientBoard and playerColor: START 2 WHITE 12 name name
 					setBoardandColor(words[2], words[3]);
-					view.print(board.toString());
+					// view.print(board.toString());
 				}
-				if (words[0].equals(Server.START)) {	
+				//Getting Start the first time: enter valid settings 				
+				else if (words[0].equals(Server.START)) {	
 					view.print("Please enter you settings -> SETTINGS <color> <bordsize>");
 				}
-			
-//------------------------------------------------------------------------				
-// command turn for making a move	
-				if (words[0].equals(Server.TURN)) {
+
+				//--------------------------------------------------------------------			
+				// command turn for making a move	
+				else if (words[0].equals(Server.TURN)) {
 					view.print(readableInput);
+
 					//set field on board
-					
 					addStone(words[2], words[1]);
 				}
-//------------------------------------------------------------------------
-// the game is ended
-				if (words[0].equals(Server.ERROR)) {
+				//------------------------------------------------------------------------
+				// the game is ended
+				else if (words[0].equals(Server.ERROR)) {
 					view.print(readableInput);
 				}
-// error commands
-				if (words[0].equals(Server.UNKNOWN)) {
+				// error commands
+				else if (words[0].equals(Server.UNKNOWN)) {
 					view.print(readableInput);
 				}
-				if (words[0].equals(Server.INVALID)) {
+				else if (words[0].equals(Server.INVALID)) {
 					view.print(readableInput);
 				}
-				if (words[0].equals(Server.NAMETAKEN)) {
+				else if (words[0].equals(Server.NAMETAKEN)) {
 					view.print(readableInput);
 				}
-				if (words[0].equals(Server.INCOMPATIBLEPROTOCOL)) {
+				else if (words[0].equals(Server.INCOMPATIBLEPROTOCOL)) {
 					view.print(readableInput);
 				}
-				if (words[0].equals(Server.OTHER)) {
+				else if (words[0].equals(Server.OTHER)) {
 					view.print(readableInput);
+				}
+				else {
+					print(readableInput);
 				}
 			} //run
 		} catch (IOException e) {
@@ -290,11 +297,11 @@ public class PlayerController implements Runnable {
 		System.out.println(message);
 	}
 	
-	public void addStone(int row, int col, Stone stone) {
-		board.setField(row, col, stone);
+	public void addStone(int row, int col, Stone steen) {
+		board.setField(row, col, steen);
 	}
  
-	//setBoard en Color
+	//setBoard and Color
 	public void setBoardandColor(String stoneColor, String boardsize) {
 		board.boardInit(Integer.parseInt(boardsize));
 		
@@ -320,7 +327,7 @@ public class PlayerController implements Runnable {
 			int row = Integer.parseInt(coordinates[0]);	
 			int col = Integer.parseInt(coordinates[1]);
 
-			Stone stone = getStoneWithName(nameParsed);
+			Stone myStone = getStoneWithName(nameParsed);
 			board.setField(row, col, stone);
 
 			//board update

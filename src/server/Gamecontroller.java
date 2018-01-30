@@ -9,7 +9,7 @@ import java.util.Map;
 import java.util.Set;
 
 import general.Protocol;
-import general.Protocol.General;
+
 import servermodel.Board;
 import servermodel.Stone;
 
@@ -22,6 +22,7 @@ public class Gamecontroller extends Protocol implements Runnable {
 	private int boardSize;
 	private Board board;
 	private static final int NUMBER_OF_PLAYERS = 2;
+	
 	//private int amountPlayers;
 	private String lastMessage;
 	private boolean settingsInput;
@@ -33,15 +34,18 @@ public class Gamecontroller extends Protocol implements Runnable {
 	
 	//terminated game
 	private boolean playerQuitGame;
-	private boolean isTerminated;
+	//private boolean isTerminated;
 	private boolean isFinished;
 	private boolean timeOut;
 	
 	private int version;
 
 	private String currentMove;
+	//private String lastMove;
 	private String previousMove;
 	private Integer[] endResult;
+	private boolean hasBoard;
+	
 	/** 
 	 * Creates a Gamecontroller with two Serverclients for the in and output control.
 	 * @param player1
@@ -56,6 +60,7 @@ public class Gamecontroller extends Protocol implements Runnable {
 		players[1] = player2;
 		currentPlayer = 0;
 		lastPlayer = 0;
+		previousMove = "-1_-1";
 		board = new Board();
 		inputUser = new ArrayList<String>();
 		
@@ -65,10 +70,11 @@ public class Gamecontroller extends Protocol implements Runnable {
 		versionPlayer2 = false;
 		
 		//termination of the game
-		isTerminated = false;
+		//isTerminated = false;
 		playerQuitGame = false;
 		isFinished = false;
 		timeOut = false;
+		hasBoard = false;
 	}
 
 	
@@ -77,13 +83,11 @@ public class Gamecontroller extends Protocol implements Runnable {
 	 */
 	@Override
 	public void run() {
-		//Set this Gamecontroller in the ServerClients.
+//Set this Gamecontroller in the ServerClients.
 		players[0].setGamecontroller(this);
 		players[1].setGamecontroller(this);
 		
-		
-		
-		System.out.println("The gamecontroller is started + 1 ");
+		System.out.println("The gamecontroller is started");
 		try {
 			Thread.sleep(1000);
 		} catch (InterruptedException e) {
@@ -91,43 +95,39 @@ public class Gamecontroller extends Protocol implements Runnable {
 			e.printStackTrace();
 		}
 
-// ----------------------------------------------------------------------
-//  sending information about name versionnumber and extenions.
+//  sending information about name VERSIONNUMBER and extensions. ------------
+	
 		sendMessageToBoth(Server.NAME + General.DELIMITER1 + serverGO.getName() + 
 					General.DELIMITER1 + Server.VERSION + General.DELIMITER1 + Server.VERSIONNO + 
-					General.DELIMITER1 + Server.EXTENSIONS + 0 + General.DELIMITER1 + 0 + 
-					General.DELIMITER1 + 0 + General.DELIMITER1 + 0 + General.DELIMITER1 + 0 + 
-					General.DELIMITER1 + 0 + General.DELIMITER1 + 0);
+					General.DELIMITER1 + Server.EXTENSIONS + General.DELIMITER1 + 0 + 
+					General.DELIMITER1 + 0 + General.DELIMITER1 + 0 + General.DELIMITER1 + 
+					0 + General.DELIMITER1 + 0 + General.DELIMITER1 + 0 + General.DELIMITER1 + 0);
 		
 		
 		//System.out.println("waiting for input from player 0");
 				
 // during game -----------------------------------------------------------		
-		while (!isTerminated) {
+		while (!isTerminated()) {
 			try {
-				Thread.sleep(15);
+				Thread.sleep(20);
 			} catch (InterruptedException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
 			
-			
 			if (!inputUser.isEmpty()) {
 // Splitting inputStream ---------------------------------------------------------
 				System.out.println("De gamecontroller heeft input ontvangen");
-
-				String inputReadable = inputUser.get(0).replaceAll("\\" + General.DELIMITER1, " ");;
-				
-		
-				
+				System.out.println(inputUser);
+				String inputReadable = inputUser.get(0).replaceAll("\\" + General.DELIMITER1, " ");
 		
 				String[] words = inputUser.get(0).split("\\" + General.DELIMITER1);
 				String idPlayer = words[0];
 				String commando = words[1];
-				print(words[0]);
-				print(words[1]);
-				print(players[0].getClientTag());
-				print(players[1].getClientTag());
+//				print(words[0]);
+//				print(words[1]);
+//				print(players[0].getClientTag());
+//				print(players[1].getClientTag());
 				
 //--------------------------------------------------------------------------------
 //getting name, version and extensions. Wanneer beide clients data hebben opgestuurd START
@@ -138,8 +138,18 @@ public class Gamecontroller extends Protocol implements Runnable {
 						versionPlayer1 = true;
 //						System.out.println("" + version);
 //						print("version ontvangen");
-						inputUser.remove(0);
+						
 						players[0].setNamePlayer(words[2]);
+						
+						// step 1. check VERSIONNUMBER
+						if (words[4].equals("6")) {
+							print("versionnumbers are equal");
+						} else {
+							players[0].sentGameData(Server.INCOMPATIBLEPROTOCOL);
+						}
+						
+						// Step 2 remove the message
+						inputUser.remove(0);
 						
 					}
 					else {
@@ -147,123 +157,155 @@ public class Gamecontroller extends Protocol implements Runnable {
 						versionPlayer2 = true;
 						System.out.println("" + version);
 						print("version ontvangen2");
-						inputUser.remove(0);
+						
 						players[1].setNamePlayer(words[2]);
+						
+						// step 1. check VERSIONNUMBER
+						if (words[4].equals("6")) {
+							print("versionnumbers are equal");
+						} else {
+							players[0].sentGameData(Server.INCOMPATIBLEPROTOCOL);
+						}
+						
+						//Step 2 remove the message
+						inputUser.remove(0);
 					}
 					
 					if (versionPlayer1 && versionPlayer2) {
 						versionReseived = true; 
 						System.out.println("beide versies ontvangen");
-						
-					//sending START en vragen om de gegevens kleur en bordgrootte 
-						players[currentPlayer].sentGameData(Server.START);
-					}
+					}	
+					
+					// step 2. sending START ask for color and board size
+					players[currentPlayer].sentGameData(Server.START + 
+							General.DELIMITER1 + NUMBER_OF_PLAYERS);
+					
 				}
 //----------------------------------------------------------------------------
-//Starting game when settings are send back. kleur en boardsize --> moet nog && settingsInput
+//Starting game when settings are send back. Color and board size. 
+
 				
-				else if (isID(idPlayer) && words.length == 4 && commando.equalsIgnoreCase(Client.SETTINGS) 
+				else if (isIDcurrentPlayer(idPlayer) && words.length == 4 
+						&& commando.equalsIgnoreCase(Client.SETTINGS) 
 						&& isColor(words[2]) && isInteger(words[3]) && versionReseived) {
 					
-					//set up game
+					//Step 1. set up game
 					board.boardInit(Integer.parseInt(words[3])); 
 					setColor(words[2]);
+					hasBoard = true;
 					settingsInput = true;
 					
-					
 					//printing test
-					print(inputUser.get(0));
-					print("the dimension is set");
+					//print(inputUser.get(0));
+					//print("the dimension is set");
 //					System.out.println(board.getDIM());
 //					System.out.println(players[0].getStone());
 					
-					//print board
+					//Step 2. print board TUI
 					print(board.toString());
 					
-					
+					//Step 3. remove this message
 					inputUser.remove(0);
 					
-					//Ask the first player to make the first move.
+					//Step 4. Ask the first player to make the first move.
 					players[0].sentGameData(Server.START + General.DELIMITER1 + NUMBER_OF_PLAYERS
 							+ General.DELIMITER1 + words[2] + General.DELIMITER1 + 
 							words[3] + General.DELIMITER1 + 
-					players[0].getNamePlayer() + General.DELIMITER1 + players[1].getNamePlayer());
+							players[0].getNamePlayer() + General.DELIMITER1 + 
+							players[1].getNamePlayer());
 					
 					players[1].sentGameData(Server.START + General.DELIMITER1 + NUMBER_OF_PLAYERS 
 							+ General.DELIMITER1 + turn(words[2]) + General.DELIMITER1 + 
 							words[3] + General.DELIMITER1 + players[0].getNamePlayer() + 
 							General.DELIMITER1 + players[1].getNamePlayer());
 					
-					//Starting the game with asking for the first turn
+					this.currentPlayer = setCurrentPlayer();
+					
+					//Step 5. Starting the game with asking for the first turn
 					sendMessageToBoth(Server.TURN + General.DELIMITER1 + 
 							players[currentPlayer].getNamePlayer() + General.DELIMITER1
 							+ Server.FIRST + General.DELIMITER1 + 
 							players[currentPlayer].getNamePlayer());
 				}
 	//--------------------------------------------------------------------
-	//Move for game row_colom
-	//checken of de message van de currentplayer is door middel van id die aan de line is gekoppeld.		
-				else if (isID(idPlayer) && commando.equalsIgnoreCase(Client.MOVE))  {
+	// Move for game row_colom	
+				else if (isIDcurrentPlayer(idPlayer) && commando.equalsIgnoreCase(Client.MOVE))  {
+					
+					// Step 1 slit words for coordinates
 					String[] coordinates = words[2].split(General.DELIMITER2);
 //					System.out.println(coordinates[0]);
 //					System.out.println(coordinates[1]);
-
+					
+					// Step 2 Determine if it are coordinates or PASS
 					if (isInteger(coordinates[0]) && isInteger(coordinates[1])) {
+					
 						int row = Integer.parseInt(coordinates[0]);	
 						int col = Integer.parseInt(coordinates[1]);
+						
+						// Step 3 check if it is a valid move
 						if (board.isValidMove(row, col)) { 
 						
-							
+						// Step 4 update board, game and TUI
 							Stone stone = players[currentPlayer].getStone();
 							board.setField(row, col, stone);
 							System.out.println(board.toString());
-							inputUser.remove(0); 
+							print("this is a previousmove bij coordinates" + previousMove);
+							turnPlayer(words[2]);
+							print("this is a previousmove bij coordinates" + previousMove);
 							
-							currentMove = words[2];
-							lastPlayer = currentPlayer;
-							currentPlayer = (currentPlayer + 1) % 2;
-							
-							sendMessageToBoth(Server.TURN + General.DELIMITER1 + players[lastPlayer].getNamePlayer() + 
+							sendMessageToBoth(Server.TURN + General.DELIMITER1 + 
+									players[lastPlayer].getNamePlayer() + 
 									General.DELIMITER1 + currentMove + General.DELIMITER1 
 									+ players[currentPlayer].getNamePlayer());
 							
 							//board update
 							board.updateBoard(row, col, stone);
 							
+							//Step 5 remove message
+							inputUser.remove(0);
 						} else {
 							sendMessageToCurrent(Server.INVALID + "please enter a valid move");
 							inputUser.remove(0); 
 						}
 					} else if (words[2].equalsIgnoreCase(Client.PASS)) {
-						// isFinished = true; pass bij twee passen
+						// isFinished = true; PASS two times in a row.
+						
 						currentMove = Client.PASS;
 						inputUser.remove(0);
-						sendMessageToBoth(Server.TURN + General.DELIMITER1 + "playername" + 
-								General.DELIMITER1 + words[2] + General.DELIMITER1 
-								+ "playersname die aan de beurt is");
-						currentPlayer = (currentPlayer + 1) % 2;
 						
+						
+						finished();
+						turnPlayer(words[2]);
+						
+						sendMessageToBoth(Server.TURN + General.DELIMITER1 + 
+								players[lastPlayer].getNamePlayer() + 
+								General.DELIMITER1 + currentMove + General.DELIMITER1 
+								+ players[currentPlayer].getNamePlayer());
 					}
 					else {
-						sendMessageToCurrent(Server.INVALID + "please enter a valid move, integers please");
+						sendMessageToCurrent(Server.INVALID + 
+								"please enter a valid move, integers please");
 						inputUser.remove(0); 
 						print(inputUser.get(0));
 					}
+	// the opponent sends a move. ----------------------------------------------			
 				}
-				else if (!isID(idPlayer) && commando.equalsIgnoreCase(Client.MOVE)) {
-						print(inputUser.get(0));
-						inputUser.remove(0); 
-						players[opponent].sentGameData("This is not your turn");
+				else if (!isIDcurrentPlayer(idPlayer) && commando.equalsIgnoreCase(Client.MOVE)) {
+					print(inputUser.get(0));
+					inputUser.remove(0); 
+					players[opponent].sentGameData("This is not your turn");
 				}
-	// ---------------------------------------------------------------------
+				// ---------------------------------------------------------------------
 	//QUIT during the game. Deze speler wordt afgesloten.
 				else if (commando.equalsIgnoreCase(Client.QUIT)) {
 					print("One of the players quit");
+					//Beide spelers blijven in de available list;
+					//Send information dat de speler is gestopt.
+					
 					playerQuitGame = true;
 					print(inputUser.get(0));
 					inputUser.remove(0); 
 				}
-				//
 				else {
 					print(words + "test");
 					inputUser.remove(0);
@@ -272,54 +314,46 @@ public class Gamecontroller extends Protocol implements Runnable {
 		}
 	// -----------------------------------------------------------------------
 	//When the game is terminated send a message to both, and shutdown the program properly. 
+		
+		print("game over");
+		if (hasBoard) {
+			
 		sendMessageToBoth(Server.ENDGAME + General.DELIMITER1 + determineReasonTermination()
 		 	+ General.DELIMITER1 + endScore());
 		shutdown();
 		if (playerQuitGame) {
-	//TODO	
+		//TODO	
 		}
-
+		}
 	} // end run method
 	
 	
+
+
+
+
+// Getters and setters ------------------------------------------------------
 	
 	
-	
-	// Getters and setters ----------------------------------------
-	
+	private void turnPlayer(String currentMadeMove) {
+		currentMove = currentMadeMove;
+		lastPlayer = currentPlayer; 
+		previousMove = currentMove;
+		currentPlayer = (currentPlayer + 1) % 2;
+	}
+
+
 	public Board getBoard() {
 		return board;
 	}
 	
-	private int opponent(int currentPlayer) {
-		if (currentPlayer == 1) {
-			return opponent = 0;
-		} else
-			return opponent = 1;
+	public String stoneToName() {
+		//TODO
+		return "";
 	}
-	
-	
-	//waarom private
-	private void setColor(String color) {
-		if (color.equalsIgnoreCase("BLACK")) {
-			players[0].setStone("BLACK");
-			players[0].setStoneColorString("BLACK");
-			players[1].setStone("WHITE");
-			players[1].setStoneColorString("WHITE");
-			
-		} else {
-			players[0].setStone("WHITE");
-			players[0].setStoneColorString("WHITE");
-			players[1].setStone("BLACK");
-			players[1].setStoneColorString("BLACK");
-		}
-	}
-	
 
 
-	
-	//waarom private
-//	private void getName(String color) {
+//	public void getName(String color) {
 //		if (players[0].getName(color).equals("BLACK")) {
 //			players[0].setStone("BLACK");
 //			players[1].setStone("WHITE");
@@ -338,12 +372,104 @@ public class Gamecontroller extends Protocol implements Runnable {
 //	
 	
 
-	public String stoneToName() {
-		//TODO
-		return "";
+// Other methods, mainly checks -----------------------------------------------------
+	/**
+	 * When getting the settings from the client, set the color. 
+	 * @param color
+	 */
+	public void setColor(String color) {
+		if (color.equalsIgnoreCase("BLACK")) {
+			players[0].setStone("BLACK");
+			players[0].setStoneColorString("BLACK");
+			players[1].setStone("WHITE");
+			players[1].setStoneColorString("WHITE");
+
+		} else {
+			players[0].setStone("WHITE");
+			players[0].setStoneColorString("WHITE");
+			players[1].setStone("BLACK");
+			players[1].setStoneColorString("BLACK");
+		}
+	}
+	
+	/**
+	 * Get the opponent of the currentplayer. 
+	 * @param currentPlayer
+	 * @return
+	 */
+	private int opponent(int currentPlayer) {
+		if (currentPlayer == 1) {
+			return 0;
+		} else
+			return 1;
+	}
+	
+	/** 
+	 * In GO black starts with the first turn. This method returns which ServerClient is black. 
+	 * This can set the currentPlayer to the right player at the client side.
+	 * @return
+	 */
+	public int setCurrentPlayer() {
+		if (players[0].getStoneColorString().equals("BLACK")) {
+			return 0;
+		} else {
+			return 1;
+		}	
 	}
 
-	// Communication ----------------------------------------------
+	/**
+	 * This checks if the user input contains to integer.
+	 * @param expectedInt
+	 * @return true if it is an integer.
+	 */
+	private boolean isInteger(String expectedInt) {
+		try {
+			Integer.parseInt(expectedInt);
+			return true;
+		} catch (NumberFormatException e) {
+			return false;
+		}
+	}
+	
+	/**
+	 * Show the board.
+	 */
+	public void showBoard() {
+		print(board.toString());
+	}
+	
+	/**
+	 * Checks if the color given by the client is a valid color. WHITE or BLACK
+	 * @param expectedColor
+	 * @return
+	 */
+	public Boolean isColor(String expectedColor) {
+		return expectedColor.equals("WHITE") || expectedColor.equals("BLACK");
+	}
+	
+	/**
+	 * Checks if the messageTag is corresponding to the currentPlayer. 
+	 * The other player should not be able to set a stone on the board.
+	 * @param clientID
+	 * @return
+	 */
+	public Boolean isIDcurrentPlayer(String clientID) {
+		return players[currentPlayer].getClientTag().equals(clientID);
+	}
+	
+	/**
+	 * Determines if the move is valid. The field should be empty on the board. 
+	 * No stone may be played so as to recreate any previous board position.
+	 * @return
+	 */
+	public boolean isValidMove(int row, int col, String boardString) {
+		return board.isField(row, col) &&
+				board.isEmptyField(row, col) && 
+				!board.isPreviousBoard(boardString); //TODO
+		
+	}
+	
+// Communication ----------------------------------------------
 	private void print(String message) {
 		System.out.println(message);
 		
@@ -358,7 +484,16 @@ public class Gamecontroller extends Protocol implements Runnable {
 		players[currentPlayer].sentGameData(message);
 	}
 	
-	// Other methods-----------------------------------------------------
+	/**
+	 * Creates the list of messages that are send.
+	 * @param line
+	 */
+	public void notify(String line) {
+		
+		inputUser.add(line);
+	}
+	
+// Terminate program methods -----------------------------------------------------------------------
 	/**
 	 * Determine the reason why the game ended. 
 	 * Game can end when the game is finished (two times pass or board is full). 
@@ -377,69 +512,34 @@ public class Gamecontroller extends Protocol implements Runnable {
 	}
 	
 	/**
-	 * Creates the list of messages that are send.
-	 * @param line
-	 */
-	public void notify(String line) {
-		
-		inputUser.add(line);
-	}
-	
-	/**
-	 * This checks if the user input contains to integer.
-	 * @param expectedInt
-	 * @return true if it is an integer.
-	 */
-	private boolean isInteger(String expectedInt) {
-		try {
-			Integer.parseInt(expectedInt);
-			return true;
-		} catch (NumberFormatException e) {
-			return false;
-		}
-	}
-	
-	public void showBoard() {
-		System.out.print(board.toString());
-	}
-	
-	/**
-	 * This method determines if the game is ended, whatever the reason may be.
-	 * @return true if it is ended
-	 */
-	public Boolean isTerminated() {
-		return isFinished || playerQuitGame || timeOut;
-	}
-
-	/**
 	 * When the previousMove and currentMove are 
 	 * both equal to pass or the board is full the game will end.
 	 * @return
 	 */
-	public Boolean isFinished() {
-		return previousMove.equals("PASS") && currentMove.equals("PASS") 
-				|| board.isFull();
-	}
-	
-	public Boolean isColor(String expectedColor) {
-		return expectedColor.equals("WHITE") || expectedColor.equals("BLACK");
-	}
-	
-	public Boolean isID(String clientID) {
-		return players[currentPlayer].getClientTag().equals(clientID);
+	public void finished() {
+		if (previousMove.equalsIgnoreCase(Client.PASS) && currentMove.equalsIgnoreCase(Client.PASS)) {
+			isFinished = true;
+		} else {
+			isFinished = false;
+		}
 	}
 	
 	/**
-	 * Determines if the move is valid. The field should be empty on the board. 
-	 * No stone may be played so as to recreate any previous board position.
-	 * @return
+	 * The game is ended when the game isFinished, playerQuitGame or timeOut.
+	 * @return true if isFinished, playerQuitGame or timeOut is true.
 	 */
-	public boolean isValidMove(int row, int col, Board board) {
-		return board.isField(row, col) &&
-				board.isEmptyField(row, col) && 
-				!board.isPreviousBoard(board); //TODO
-		
+	public Boolean isTerminated() {
+		return isFinished || playerQuitGame || timeOut;
 	}
+		
+	public Boolean isTimeOut() {
+		//TODO
+		return false;
+	}
+	
+
+// Scoring -----------------------------------------------------------------------------
+	
 	
 	/**
 	 * This method maps the players name with the score.
@@ -460,17 +560,25 @@ public class Gamecontroller extends Protocol implements Runnable {
 	public String endResult() {
 		String endresult;
 		if (board.isWinner(players[0].getStone())) {
-			endresult = players[0].getNamePlayer() + General.DELIMITER1 + board.countScore(players[0].getStone()) + 
-					General.DELIMITER1 + players[1].getNamePlayer() + General.DELIMITER1 + board.countScore(players[1].getStone());
+			endresult = players[0].getNamePlayer() + General.DELIMITER1 + 
+					board.countScore(players[0].getStone()) + General.DELIMITER1 
+					+ players[1].getNamePlayer() + General.DELIMITER1 + 
+					board.countScore(players[1].getStone());
 		} else if (board.isWinner(players[1].getStone())) {
-			endresult = players[1].getNamePlayer() + General.DELIMITER1 + board.countScore(players[1].getStone()) + 
-					General.DELIMITER1 + players[0].getNamePlayer() + General.DELIMITER1 + board.countScore(players[0].getStone());
+			endresult = players[1].getNamePlayer() + General.DELIMITER1 + 
+					board.countScore(players[1].getStone()) + General.DELIMITER1 + 
+					players[0].getNamePlayer() + General.DELIMITER1 + 
+					board.countScore(players[0].getStone());
 		} else {
-			endresult = players[1].getNamePlayer() + General.DELIMITER1 + board.countScore(players[1].getStone()) + 
-					General.DELIMITER1 + players[0].getNamePlayer() + General.DELIMITER1 + board.countScore(players[0].getStone());
+			endresult = players[1].getNamePlayer() + General.DELIMITER1 + 
+					board.countScore(players[1].getStone()) + 
+					General.DELIMITER1 + players[0].getNamePlayer() + 
+					General.DELIMITER1 + board.countScore(players[0].getStone());
 		}
 		return endresult;
 	}
+
+	// Other methods ----------------------------------------------------------------------
 	
 	/**
 	 * Switching the color.

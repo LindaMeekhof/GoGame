@@ -11,15 +11,20 @@ import general.Protocol.Server;
 
 public class HumPlayer extends PlayerController {
 
-//	public HumPlayer(String playerName, Socket sockArg, Player player) throws IOException {
-//		super(playerName, sockArg, player);
-//	}
 
+	/**
+	 * Creating a HumanPlayer to play the GOGAME. 
+	 * @param playerName
+	 * @param sockArg
+	 * @throws IOException
+	 */
 	public HumPlayer(String playerName, Socket sockArg) throws IOException {
 		super(playerName, sockArg);
 	}
 	/**
-	 * Read the input of the Console with scanner; what the human player inputs.
+	 * Read the input of the Console with scanner; what the human player inputs. 
+	 * The player can enter all the commands at any time.
+	 * COMMANDS are name, move, settings, quit, exit, requestgame and chat.
 	 * @param prompt
 	 * @return
 	 */
@@ -40,33 +45,48 @@ public class HumPlayer extends PlayerController {
 					String commando = inputConsole[0].toUpperCase();
 
 					switch (commando) {
-						//ook nog checken op validmove
+						case "NAME":
+							sendMessage(value.toUpperCase());
+							break;
+							//ValidMove moet nog gecheckt worden.
 						case "MOVE":
-							if (isInteger(inputConsole[1]) && isInteger(inputConsole[2])) {
-								sendMessage(Client.MOVE + General.DELIMITER1 + inputConsole[1] + General.DELIMITER2 + inputConsole[2]);
-							} else if (inputConsole[1].equals("PASS")){
+							if (inputConsole.length == 3 && isInteger(inputConsole[1]) && 
+								isInteger(inputConsole[2])) {
+								sendMessage(Client.MOVE + General.DELIMITER1 + 
+										inputConsole[1] + General.DELIMITER2 + inputConsole[2]);
+							} else if (inputConsole[1].equalsIgnoreCase("PASS")) {
 								sendMessage(Client.MOVE + General.DELIMITER1 + Client.PASS);
 							} else {
 								print("Please enter a valid move");
 							}
 							break;
 						case "SETTINGS":
-							if (inputConsole.length == 3 && isColor(inputConsole[1]) && isInteger(inputConsole[2])) {
-								sendMessage(Client.SETTINGS + General.DELIMITER1 + inputConsole[1].toUpperCase() + General.DELIMITER1 + inputConsole[2]);
-								//setBoard en Color
-								setBoardandColor(inputConsole[1], inputConsole[2]);
+							if (inputConsole.length == 3 && isColor(inputConsole[1]) 
+								&& isInteger(inputConsole[2]) 
+								&& Integer.parseInt(inputConsole[2]) < 20 
+								&& Integer.parseInt(inputConsole[2]) > 4) {
+								sendMessage(Client.SETTINGS + General.DELIMITER1 
+										+ inputConsole[1].toUpperCase() + General.DELIMITER1 
+										+ inputConsole[2]);
+	
+								//setBoard and Color
+								setBoardandColor(inputConsole[1], inputConsole[2]);	
 							} else {
 								print("please enter valid settings");
 							}
-							//System.out.println("settings" + value); 
 							break;
 						case "QUIT":
-							sendMessage(commando);
-							System.out.println(commando);
+							sendMessage(Client.QUIT);
+							System.out.println(Client.QUIT);
+							//shutdown();
+							break;
+						case "EXIT":
+							sendMessage("QUIT");
+							System.out.println("QUIT");
 							shutdown();
 							break;
 						case "REQUESTGAME":
-							sendMessage(commando);
+							sendMessage(Client.REQUESTGAME + General.DELIMITER1 + Client.RANDOM);
 							break;
 						case Client.CHAT:
 							sendMessage(Client.CHAT + General.DELIMITER1 + value);
@@ -74,15 +94,9 @@ public class HumPlayer extends PlayerController {
 						default:
 							System.out.println("unknown input"); break;
 					}
-
-
-					//	sendMessage(value);
-
 				}
 			}
 		} 
 		return value;
 	}
-	
-	
 }

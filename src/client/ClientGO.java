@@ -39,7 +39,7 @@ public class ClientGO {
         } catch (UnknownHostException e) {
             System.out.println(USAGE);
             System.out.println("ERROR: host " + args[1] + " unknown");
-            System.exit(0);
+            System.exit(0);                
         }
         
         // parse args[2] - the port is not a number
