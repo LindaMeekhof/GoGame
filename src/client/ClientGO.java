@@ -73,34 +73,26 @@ public class ClientGO {
         PlayerController client; 
       
 	/**
-	 * 
+	 * Creates a PlayerController. This is for two-way communication with the server.
 	 */
-        //communicatieObject aanmaken. In dit geval een ClientController
-        // create Peer object and start the two-way communication
         try {
-           
-            if (args[3].equals("-N")) { 
-            client = new HumPlayer(name, sock);
-            } else {
-            	client = new HumPlayer(name, sock);
-           // 	PlayerController client = new Computer(name, sock, player);
-            }
-    
-       // 	PlayerController client = new PlayerController(name, sock, player);
-           
-            Thread serverInputHandler = new Thread(client);//kan korter.
-            serverInputHandler.start(); //run method regelt de inputstream die komt vanaf de server
-          
-            //TerminalInput
-            while (true) {
-            		((HumPlayer) client).readStringConsole("...");
-            }
-            
-           //client.shutdown();
-//            String clientInput = client.readStringConsole("input");
-//            System.out.println("sending client input " + clientInput + " to server");
-//            client.sendMessage(clientInput);
-            
+
+        	if (args[3].equals("-N")) { 
+        		client = new HumPlayer(name, sock);
+        	} else {
+        		client = new ComputerPlayer(name, sock);
+        		// 	PlayerController client = new Computer(name, sock, player);
+        	}
+
+        	// 	PlayerController client = new PlayerController(name, sock, player);
+        	Thread serverInputHandler = new Thread(client);
+        	serverInputHandler.start(); 
+
+        	//TerminalInput
+        	while (true) {
+        		((HumPlayer) client).readStringConsole("...");
+        	}
+      
         } catch (IOException e) {
             e.printStackTrace();
         }

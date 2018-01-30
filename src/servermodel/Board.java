@@ -1,5 +1,6 @@
 package servermodel;
 
+
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -7,6 +8,13 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+
+import com.nedap.go.gui.GOGUI;
+import com.nedap.go.gui.GOGUIImpl;
+import com.nedap.go.gui.GoGUIIntegrator;
+import com.nedap.go.gui.InvalidCoordinateException;
+
+import general.Protocol.General;
 
 
 
@@ -21,7 +29,7 @@ import java.util.Set;
 public class Board {
 	//Constants
 	private int dimension; 
-	
+	private GoGUIIntegrator gogui;
 	
 	
 	/**
@@ -32,6 +40,7 @@ public class Board {
     /*@ invariant (\forall int i; 0 <= i & i < DIM*DIM;
         getField(i) == Stone.__ || getField(i) == Stone.w || getField(i) == Stone.b); */
 	private Stone[] fields;
+
 	
 //	public Board() {
 //		
@@ -52,6 +61,7 @@ public class Board {
 //		for (int i = 0; i < dimension * dimension; i++) {
 //			fields[i] = Stone.__;
 //		}
+
 	}
 	
 	public void boardInit(int dimension) {
@@ -60,9 +70,12 @@ public class Board {
 		// All fields are initially empty
 		for (int i = 0; i < dimension * dimension; i++) {
 			fields[i] = Stone.__;
-			
-		this.dimension = dimension;
+
 		}
+		gogui = new GoGUIIntegrator(false, true, dimension);
+		gogui.startGUI();
+		gogui.setBoardSize(9);
+		this.dimension = dimension;
 	}
 	
 	/**
@@ -140,16 +153,17 @@ public class Board {
 	
 	
 	/**
-	 * Klopt deze?
 	 * This method sets the field, indicated with row and col, to the given stone parameter.
 	 * @param row is the field's row.
 	 * @param col is the field's  column.
 	 * @param stone is the given Stone mark to be placed.
+	 * @throws InvalidCoordinateException 
 	 */
 	//@ requires this.isField(i);
 	//@ ensures this.fields == stone;
 	public void setField(int row, int col, Stone stone) {
 		this.fields[index(row, col)] = stone;
+		gogui.addStone(col, row, stone.equals(Stone.w));
 	}
 
 	/**
@@ -349,6 +363,8 @@ public class Board {
 
 	private ArrayList<Stonegroup> stonegroups = new ArrayList<Stonegroup>();
 
+
+
 	
 	public List<Stonegroup> getAllStonegroups() {
 		return stonegroups;
@@ -397,7 +413,7 @@ public class Board {
 	 * When a stonegroup is captured by the other player. 
 	 * These captured stones are removed from the board.
 	 * Remove the set of stones that are captured.
-	 * Laatste group niet meerenekne
+	 * Laatste group niet meerekenen
 	 */
 	//@ requires isCaptured();
 	//@ ensures \result == Stone.__;
@@ -411,6 +427,10 @@ public class Board {
 				for (int indexList = 0; indexList < group.getStonegroup().size(); indexList++) {
 					setFields(group.getStonegroup().get(indexList), Stone.__);
 					capturedGroups.add(group);
+					int[] coordinates =  indexToRowCol(group.getStonegroup().get(indexList));
+					int row = coordinates[0];
+					int col = coordinates[1];
+					gogui.removeStone(col,  row);
 				}
 			}
 		}	
@@ -426,6 +446,10 @@ public class Board {
 		for (int i = 0; i < listOfIndex.size(); i++) {
 			int indexStone = listOfIndex.get(i);
 			setFields(indexStone, Stone.__);
+			int[] coordinates =  indexToRowCol(i);
+			int row = coordinates[0];
+			int col = coordinates[1];
+			//gogui.removeStone(col, row);
 		}
 	}
 	
@@ -438,6 +462,7 @@ public class Board {
 		// de laatste stonechain
 		if (!groupHasLiberties(stonegroups.get(stonegroups.size() - 1))) {
 			removeStones(stonegroups.get(stonegroups.size() - 1));
+			gogui.removeStone(col, row);
 		}
 		System.out.println(toString());
 		previousBoards.add(toString());
@@ -485,13 +510,7 @@ public class Board {
 //		return scores;
 //	}
 	
-	public int areaScore() {
-		//TODO
-		return 0;
-	}
-	
 
-	
 	/**
 	 * The winner with the biggest area wins. 
 	 * A player's area consists of all the intersections the player 
@@ -550,7 +569,10 @@ public class Board {
 	
 	
 // Area scoring ------------------------------------------------------------------------------------
-	private List<Stonegroup> emptyFieldStonegroup = new ArrayList<Stonegroup>();
+	//islandList is de lijst met alle stonegroup met kleur empty.
+	private List<Stonegroup> islandList = new ArrayList<Stonegroup>();
+	
+// de lijst met alle lege velden
 	private ArrayList<Integer> emptyFieldList = new ArrayList<Integer>();
 	
 	public ArrayList<Integer> getEmptyFieldList() {
@@ -561,25 +583,30 @@ public class Board {
 		this.emptyFieldList = emptyFieldList;
 	}
 
+	
 	public int capturedArea(Stone color) {
 		int areaCaptured = 0;
+		
+		//Een lijst met alle neighbors of the group.
 		ArrayList<Stone> neighborGroup = new ArrayList<Stone>();
+		
+		//Alle groepen bij langs in de isLandlist, alle intersections
+		for (Stonegroup emptyGroup : islandList) {
 
-		for (Stonegroup emptygroup : emptyFieldStonegroup) {
-
-			for (int i = 0;  i < emptygroup.getStonegroup().size(); i++) {
-				int intersection = emptygroup.getStonegroup().get(i);
+			for (int i = 0;  i < emptyGroup.getStonegroup().size(); i++) {
+				int intersection = emptyGroup.getStonegroup().get(i);
 
 				int[] coordinates = indexToRowCol(intersection);
 				int row = coordinates[0];
 				int col = coordinates[1];
 				
 				ArrayList<Stone> neighbor = gettingNeighborsColor(row, col);
+				//alle neighbors worden toegevoegd. Neighborcolor can be white, black and empty
 				neighborGroup.addAll(neighbor);
 			}
-			
+			// als het alleen maar jou kleur heeft of empty, dan is de group gecaptured
 			if (neighborGroup.contains(color) && !neighborGroup.contains(color.other())) {
-				areaCaptured = areaCaptured + emptygroup.getStonegroup().size();
+				areaCaptured = areaCaptured + emptyGroup.getStonegroup().size();
 			} 
 		}
 		return areaCaptured;
@@ -597,7 +624,7 @@ public class Board {
 		}
 		
 		for (int i = 0; i < emptyFieldList.size(); i++) {
-			createEmptyFieldChain(i, Stone.__); 
+			createIsland(i, Stone.__); 
 		}
 	}
 	
@@ -606,26 +633,28 @@ public class Board {
 	 * @param emptyField
 	 * @param emptyColor
 	 */
-	public void createEmptyFieldChain(int emptyField, Stone emptyColor) {
+	public void createIsland(int emptyField, Stone emptyColor) {
 		//from index to row and col
 		int[] coordinates = indexToRowCol(emptyField);
 		int row = coordinates[0];
 		int col = coordinates[1];
 
-		ArrayList<Integer> neighbors = (ArrayList<Integer>) gettingNeighbors(row, col);
+		ArrayList<Integer> neighborsneighborsIslandStone = (ArrayList<Integer>) gettingNeighbors(row, col);
 
-		//create a new stonegroup with the aangrenzende stenen en de nieuwe steen
+		//create a new stonegroup with  the neighboring stones and the new emptystonefield
 		Stonegroup emptyStonegroup = new Stonegroup(emptyColor);
-
+		
+		//set van groepen die grenzen aan het lege veld
 		Set<Stonegroup> neighborGroup = new HashSet<>();
 
-		if (!emptyFieldStonegroup.isEmpty()) {
-			for (Stonegroup stoneChain : emptyFieldStonegroup) {
-				if (stoneChain.getStone().equals(emptyColor)) {
+		if (!islandList.isEmpty()) {
+			for (Stonegroup stoneChain : islandList) {
+				
+				if (stoneChain.getStone().equals(emptyColor)) { //dubbele check
 					// intereer over de lijst van intersections
 					for (int i = 0; i < stoneChain.getStonegroup().size(); i++) {
-						for (int itersection = 0; itersection < neighbors.size(); itersection++) {
-							if (stoneChain.getStonegroup().contains(neighbors.get(itersection))) {
+						for (int intersection = 0; intersection < neighborsneighborsIslandStone.size(); intersection++) {
+							if (stoneChain.getStonegroup().contains(neighborsneighborsIslandStone.get(intersection))) {
 								neighborGroup.add(stoneChain);
 							}
 						}
@@ -634,12 +663,13 @@ public class Board {
 			}
 			for (Stonegroup neigh : neighborGroup) {
 				emptyStonegroup.getStonegroup().addAll(neigh.getStonegroup());
-				emptyFieldStonegroup.remove(neigh);
+				islandList.remove(neigh);
 			}
 		}
+		
 		//remove the groups that are neighbors and make it one group.	
 		emptyStonegroup.getStonegroup().add(index(row, col)); 
-		stonegroups.add(emptyStonegroup);
+		islandList.add(emptyStonegroup);
 	}
 	
 	/**
@@ -665,6 +695,7 @@ public class Board {
 
 // Main --------------------------------------------------------
 	public static void main(String[] args) {
+	//	GOGUIImpl gogui = new GOGUIImpl();
 		Board board = new Board();
 		board.boardInit(5);
 		Board board2 = new Board();

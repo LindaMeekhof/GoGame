@@ -8,6 +8,9 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 
+import com.nedap.go.gui.GOGUI;
+import com.nedap.go.gui.GOGUIImpl;
+
 import general.Protocol;
 
 import servermodel.Board;
@@ -45,6 +48,14 @@ public class Gamecontroller extends Protocol implements Runnable {
 	private String previousMove;
 	private Integer[] endResult;
 	private boolean hasBoard;
+	private int abortedPlayer;
+	private boolean isAborted;
+	private GOGUI gogui;
+	
+	private int dimensionBoard;
+	private int amountBlackStones;
+	private int amountWhiteStones;
+	private boolean stoneBasketEmpty;
 	
 	/** 
 	 * Creates a Gamecontroller with two Serverclients for the in and output control.
@@ -75,6 +86,8 @@ public class Gamecontroller extends Protocol implements Runnable {
 		isFinished = false;
 		timeOut = false;
 		hasBoard = false;
+		isAborted = false;
+		stoneBasketEmpty = false;
 	}
 
 	
@@ -91,8 +104,8 @@ public class Gamecontroller extends Protocol implements Runnable {
 		try {
 			Thread.sleep(1000);
 		} catch (InterruptedException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			System.out.println("interrupted while sleeping");
+	
 		}
 
 //  sending information about name VERSIONNUMBER and extensions. ------------
@@ -111,8 +124,7 @@ public class Gamecontroller extends Protocol implements Runnable {
 			try {
 				Thread.sleep(20);
 			} catch (InterruptedException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
+				System.out.println("interrupted while sleeping");
 			}
 			
 			if (!inputUser.isEmpty()) {
@@ -183,23 +195,21 @@ public class Gamecontroller extends Protocol implements Runnable {
 				}
 //----------------------------------------------------------------------------
 //Starting game when settings are send back. Color and board size. 
-
-				
+	
 				else if (isIDcurrentPlayer(idPlayer) && words.length == 4 
 						&& commando.equalsIgnoreCase(Client.SETTINGS) 
 						&& isColor(words[2]) && isInteger(words[3]) && versionReseived) {
 					
 					//Step 1. set up game
+					dimensionBoard = Integer.parseInt(words[3]);
+					amountBlackStones = dimensionBoard / 2 + 1;
+					amountWhiteStones = dimensionBoard / 2;
+					
+					
 					board.boardInit(Integer.parseInt(words[3])); 
 					setColor(words[2]);
 					hasBoard = true;
 					settingsInput = true;
-					
-					//printing test
-					//print(inputUser.get(0));
-					//print("the dimension is set");
-//					System.out.println(board.getDIM());
-//					System.out.println(players[0].getStone());
 					
 					//Step 2. print board TUI
 					print(board.toString());
@@ -231,7 +241,7 @@ public class Gamecontroller extends Protocol implements Runnable {
 	// Move for game row_colom	
 				else if (isIDcurrentPlayer(idPlayer) && commando.equalsIgnoreCase(Client.MOVE))  {
 					
-					// Step 1 slit words for coordinates
+					// Step 1 split words for coordinates
 					String[] coordinates = words[2].split(General.DELIMITER2);
 //					System.out.println(coordinates[0]);
 //					System.out.println(coordinates[1]);
@@ -259,6 +269,10 @@ public class Gamecontroller extends Protocol implements Runnable {
 									+ players[currentPlayer].getNamePlayer());
 							
 							//board update
+							
+							calculateStone(players[currentPlayer].getStone());
+							
+							stoneBasketEmpty = emptyBasket();
 							board.updateBoard(row, col, stone);
 							
 							//Step 5 remove message
@@ -301,10 +315,13 @@ public class Gamecontroller extends Protocol implements Runnable {
 					print("One of the players quit");
 					//Beide spelers blijven in de available list;
 					//Send information dat de speler is gestopt.
+					abortedPlayer = determineAbortedPlayer(words[0]);
+					isAborted = true; 
 					
 					playerQuitGame = true;
 					print(inputUser.get(0));
 					inputUser.remove(0); 
+	
 				}
 				else {
 					print(words + "test");
@@ -312,24 +329,36 @@ public class Gamecontroller extends Protocol implements Runnable {
 				}
 			}
 		}
+	
 	// -----------------------------------------------------------------------
 	//When the game is terminated send a message to both, and shutdown the program properly. 
 		
 		print("game over");
 		if (hasBoard) {
 			
-		sendMessageToBoth(Server.ENDGAME + General.DELIMITER1 + determineReasonTermination()
-		 	+ General.DELIMITER1 + endScore());
-		shutdown();
-		if (playerQuitGame) {
-		//TODO	
-		}
+			sendMessageToBoth(Server.ENDGAME + General.DELIMITER1 
+				+ determineReasonTermination() + General.DELIMITER1 
+				+ endResult());
+			shutdown();
+		
+
 		}
 	} // end run method
 	
 	
 
 
+
+
+
+	/**
+	 * When the amount of stones is 0. The game is ended.
+	 * @return
+	 */
+	public Boolean emptyBasket() {
+		return amountBlackStones == 0 || amountWhiteStones == 0;
+		
+	}
 
 
 // Getters and setters ------------------------------------------------------
@@ -363,16 +392,6 @@ public class Gamecontroller extends Protocol implements Runnable {
 //		}
 //	}
 
-//	public void setBoard(String settings) {
-//		//set dimension board
-//		int size = Integer.parseInt(settings);
-//		this.board = new Board(size);
-//		boardSize = size;
-//	}
-//	
-	
-
-// Other methods, mainly checks -----------------------------------------------------
 	/**
 	 * When getting the settings from the client, set the color. 
 	 * @param color
@@ -391,18 +410,45 @@ public class Gamecontroller extends Protocol implements Runnable {
 			players[1].setStoneColorString("BLACK");
 		}
 	}
-	
+
+// Other methods, mainly checks -----------------------------------------------------
+
+	/**
+	 * Calculate the amount of stones. When the player has no stones left the game is ended.
+	 * @param stone
+	 */
+	public void calculateStone(Stone stone) {
+		if (stone.equals(Stone.b)) {
+			amountBlackStones -= 1;
+		} else {
+			amountWhiteStones -= 1;
+		}
+		
+	}
 	/**
 	 * Get the opponent of the currentplayer. 
 	 * @param currentPlayer
 	 * @return
 	 */
-	private int opponent(int currentPlayer) {
+	public int opponent(int currentPlayer) {
 		if (currentPlayer == 1) {
 			return 0;
 		} else
 			return 1;
 	}
+	
+	/**
+	 * Determine which player left the game. This score should be 0.
+	 * @param idTag
+	 * @return
+	 */
+	public int determineAbortedPlayer(String idTag) {
+		if (players[0].getClientTag().equals(idTag)) {
+			return 0;
+		} else {
+			return 1;
+		}
+	} 
 	
 	/** 
 	 * In GO black starts with the first turn. This method returns which ServerClient is black. 
@@ -517,7 +563,8 @@ public class Gamecontroller extends Protocol implements Runnable {
 	 * @return
 	 */
 	public void finished() {
-		if (previousMove.equalsIgnoreCase(Client.PASS) && currentMove.equalsIgnoreCase(Client.PASS)) {
+		if (previousMove.equalsIgnoreCase(Client.PASS) && 
+				currentMove.equalsIgnoreCase(Client.PASS)) {
 			isFinished = true;
 		} else {
 			isFinished = false;
@@ -529,7 +576,7 @@ public class Gamecontroller extends Protocol implements Runnable {
 	 * @return true if isFinished, playerQuitGame or timeOut is true.
 	 */
 	public Boolean isTerminated() {
-		return isFinished || playerQuitGame || timeOut;
+		return isFinished || playerQuitGame || timeOut || stoneBasketEmpty;
 	}
 		
 	public Boolean isTimeOut() {
@@ -557,9 +604,22 @@ public class Gamecontroller extends Protocol implements Runnable {
 		return scores;
 	}
 	
+	/**
+	 * This gives the endResult of the game. 
+	 * When a player aborted the game then his or her score is 0.
+	 * @return
+	 */
 	public String endResult() {
 		String endresult;
-		if (board.isWinner(players[0].getStone())) {
+		if (isAborted && abortedPlayer == 0) {
+			endresult = players[1].getNamePlayer() + General.DELIMITER1 + 
+					board.countScore(players[1].getStone()) + General.DELIMITER1 +
+					players[0].getNamePlayer()  + General.DELIMITER1 + 0;
+		} else if (isAborted && abortedPlayer == 1) {
+			endresult = players[0].getNamePlayer() + General.DELIMITER1 + 
+					board.countScore(players[0].getStone()) + General.DELIMITER1 +
+					players[1].getNamePlayer()  + General.DELIMITER1 + 0;
+		} else if (board.isWinner(players[0].getStone())) {
 			endresult = players[0].getNamePlayer() + General.DELIMITER1 + 
 					board.countScore(players[0].getStone()) + General.DELIMITER1 
 					+ players[1].getNamePlayer() + General.DELIMITER1 + 

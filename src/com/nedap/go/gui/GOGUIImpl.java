@@ -216,7 +216,7 @@ public class GOGUIImpl extends Application {
         }
     }
 
-    protected void addStone(int x, int y, boolean white) throws InvalidCoordinateException {
+    public void addStone(int x, int y, boolean white) throws InvalidCoordinateException {
         checkCoordinates(x, y);
         removeStone(x, y);
 
@@ -251,7 +251,7 @@ public class GOGUIImpl extends Application {
         }
     }
 
-    protected void removeStone(int x, int y) throws InvalidCoordinateException {
+    public void removeStone(int x, int y) throws InvalidCoordinateException {
         checkCoordinates(x, y);
 
         if (board[x][y] != null) {

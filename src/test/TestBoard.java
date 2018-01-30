@@ -415,9 +415,22 @@ class TestBoard {
 	}
 	
 	@Test
-	void isWinner() {
+	void createIsland() {
+		board.setFields(1, Stone.b);
+		board.setFields(3, Stone.b);
+		board.setFields(5, Stone.b);
+		board.setFields(7, Stone.b);
 		
+		board.createIsland(0, Stone.__);
+		//board.getEmptyFieldList();
+		
+		System.out.println(board.getEmptyFieldList());
+		
+		System.out.println("score" + board.countScore(black));
 	}
+	
+
+	
 }
 
 
