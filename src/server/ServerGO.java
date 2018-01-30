@@ -40,7 +40,7 @@ public class ServerGO extends Thread {
 		server.start();
 		
 		
-		System.out.println("gaat nog steeds door");
+		//System.out.println("gaat nog steeds door");
 		
 		
 	}

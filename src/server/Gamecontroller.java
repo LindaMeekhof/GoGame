@@ -184,10 +184,21 @@ public class Gamecontroller extends Protocol implements Runnable {
 					inputUser.remove(0);
 					
 					//Ask the first player to make the first move.
+					players[0].sentGameData(Server.START + General.DELIMITER1 + NUMBER_OF_PLAYERS
+							+ General.DELIMITER1 + words[2] + General.DELIMITER1 + 
+							words[3] + General.DELIMITER1 + 
+					players[0].getNamePlayer() + General.DELIMITER1 + players[1].getNamePlayer());
+					
+					players[1].sentGameData(Server.START + General.DELIMITER1 + NUMBER_OF_PLAYERS 
+							+ General.DELIMITER1 + turn(words[2]) + General.DELIMITER1 + 
+							words[3] + General.DELIMITER1 + players[0].getNamePlayer() + 
+							General.DELIMITER1 + players[1].getNamePlayer());
+					
+					//Starting the game with asking for the first turn
 					sendMessageToBoth(Server.TURN + General.DELIMITER1 + 
 							players[currentPlayer].getNamePlayer() + General.DELIMITER1
-							+ Server.FIRST + General.DELIMITER1 + players[currentPlayer].getNamePlayer());
-
+							+ Server.FIRST + General.DELIMITER1 + 
+							players[currentPlayer].getNamePlayer());
 				}
 	//--------------------------------------------------------------------
 	//Move for game row_colom
@@ -211,10 +222,10 @@ public class Gamecontroller extends Protocol implements Runnable {
 							currentMove = words[2];
 							lastPlayer = currentPlayer;
 							currentPlayer = (currentPlayer + 1) % 2;
-							sendMessageToBoth("test");
-							sendMessageToBoth(Server.TURN + General.DELIMITER1 + players[lastPlayer].getName() + 
+							
+							sendMessageToBoth(Server.TURN + General.DELIMITER1 + players[lastPlayer].getNamePlayer() + 
 									General.DELIMITER1 + currentMove + General.DELIMITER1 
-									+ players[currentPlayer].getName());
+									+ players[currentPlayer].getNamePlayer());
 							
 							//board update
 							board.updateBoard(row, col, stone);
@@ -461,6 +472,16 @@ public class Gamecontroller extends Protocol implements Runnable {
 		return endresult;
 	}
 	
+	/**
+	 * Switching the color.
+	 */
+	public String turn(String color) {
+		if (color.equals("BLACK")) {
+			return "WHITE";
+		} else {
+			return "BLACK";
+		}
+	}
 	/**
 	 * Shutdown the game property.
 	 */

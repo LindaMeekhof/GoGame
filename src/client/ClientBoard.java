@@ -1,4 +1,4 @@
-package servermodel;
+package client;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -7,6 +7,8 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import client.Stone;
+import client.Stonegroup;
 
 
 
@@ -18,7 +20,7 @@ import java.util.Set;
  *
  */
 
-public class Board {
+public class ClientBoard {
 	//Constants
 	private int dimension; 
 	
@@ -44,7 +46,7 @@ public class Board {
 	 * this.getField(i) == Stone.__);
 	 */
 	// Constructor
-	public Board() {
+	public ClientBoard() {
 //		this.dimension = dimension;
 //		fields = new Stone[dimension * dimension];
 //		
@@ -73,8 +75,8 @@ public class Board {
         ensures (\forall int i; 0 <= i & i < DIM * DIM;
                                 \result.getField(i) == this.getField(i));
       @*/
-	public Board deepCopy() {
-		Board copyboard = new Board();
+	public ClientBoard deepCopy() {
+		ClientBoard copyboard = new ClientBoard();
 		for (int i = 0; i < dimension * dimension; i++) {
 			copyboard.fields[i] = this.fields[i];
 		}
@@ -232,7 +234,15 @@ public class Board {
 		return isFull;
 	}
 	
-
+	/**
+	 * Returns true if the board is full or both players have skipped their turn after each other.
+	 * @return true is game is over.
+	 */
+	/*pure*/
+	// ensures \result == this.isFull() || twee keer pass
+	public boolean gameOver() {
+		return false;
+	}
 	
 	//@ ensures (\forall int i; 0 <= i & i < DIM*DIM; this.field == Stone.__);
 	public void reset() {
@@ -347,7 +357,7 @@ public class Board {
 	}
 	
 
-	private ArrayList<Stonegroup> stonegroups = new ArrayList<Stonegroup>();
+	private List<Stonegroup> stonegroups = new ArrayList<Stonegroup>();
 
 	
 	public List<Stonegroup> getAllStonegroups() {
@@ -401,7 +411,7 @@ public class Board {
 	 */
 	//@ requires isCaptured();
 	//@ ensures \result == Stone.__;
-	public void removeStonesCaptured() {
+	private void removeStonesCaptured() {
 		HashSet<Stonegroup> capturedGroups = new HashSet<Stonegroup>();
 		
 		for (int i = 0; i < stonegroups.size() - 1; i++) {
@@ -421,7 +431,7 @@ public class Board {
 		}
 	}
 
-	public void removeStones(Stonegroup stonegroup) {
+	private void removeStones(Stonegroup stonegroup) {
 		List<Integer> listOfIndex = stonegroup.getStonegroup();
 		for (int i = 0; i < listOfIndex.size(); i++) {
 			int indexStone = listOfIndex.get(i);
@@ -440,37 +450,77 @@ public class Board {
 			removeStones(stonegroups.get(stonegroups.size() - 1));
 		}
 		System.out.println(toString());
-		previousBoards.add(toString());
 	}
 
 	
-
+	public static void main(String[] args) {
+		ClientBoard board = new ClientBoard();
+		board.boardInit(5);
+		
+		board.setField(1, 2, Stone.b);
+		
+		board.updateBoard(1, 2, Stone.b);
+		board.setField(2, 1, Stone.b);
+		board.updateBoard(2, 1, Stone.b);
+		board.setField(3, 2, Stone.b);
+		board.updateBoard(3, 2, Stone.b);
+		board.setField(2, 3, Stone.b);
+		board.updateBoard(2, 3, Stone.b);
+		
+	//	System.out.println("hello" + board.toString());
+		
+		board.setField(2, 2, Stone.w);
+		board.updateBoard(2, 2, Stone.w);
+		
+		board.setField(0, 0, Stone.w);
+	//	System.out.println("hello2" + board.toString());
+		board.updateBoard(0, 0, Stone.w);
+		
+		board.setField(1, 1, Stone.w);
+		board.updateBoard(1, 1, Stone.w);
+		
+		board.setField(0, 1, Stone.b);
+		board.updateBoard(0, 1, Stone.b);
+		
+		board.setField(1, 0, Stone.b);
+		board.updateBoard(1, 0, Stone.b);
+	
+	}
 	
 
 
-//	/**
-//	 *  A map which contains the neighbors colour and index of the intersection.
-//	 *  his length of the list can be 4, 3 (side of the field) or 2 (corner of the field).
-//	 *  
-//	 */
-//	public Map<Integer, Stone> getNeighborMap(int row, int col) {
-//		Map<Integer, Stone> neighbors = new HashMap<Integer, Stone>();
-//		if (row > 0)  {
-//			neighbors.put(index(row - 1, col), getField(row - 1, col)); //top
-//		}
-//		if (row < dimension - 1) {
-//			neighbors.put(index(row + 1, col), getField(row + 1, col)); //down
-//		}
-//		if (col > 0) {
-//			neighbors.put(index(row, col - 1), getField(row, col - 1)); //left
-//		}
-//		if (col < dimension - 1) {
-//			neighbors.put(index(row, col + 1), getField(row, col + 1)); //right
-//		}
-//		return neighbors;	
-//	}
+	/**
+	 *  A map which contains the neighbors colour and index of the intersection.
+	 *  his length of the list can be 4, 3 (side of the field) or 2 (corner of the field).
+	 *  
+	 */
+	public Map<Integer, Stone> getNeighborMap(int row, int col) {
+		Map<Integer, Stone> neighbors = new HashMap<Integer, Stone>();
+		if (row > 0)  {
+			neighbors.put(index(row - 1, col), getField(row - 1, col)); //top
+		}
+		if (row < dimension - 1) {
+			neighbors.put(index(row + 1, col), getField(row + 1, col)); //down
+		}
+		if (col > 0) {
+			neighbors.put(index(row, col - 1), getField(row, col - 1)); //left
+		}
+		if (col < dimension - 1) {
+			neighbors.put(index(row, col + 1), getField(row, col + 1)); //right
+		}
+		return neighbors;	
+	}
 	
+	/**
+	 * Update the board.
+	 * @param row
+	 * @param col
+	 * @param stoneColour
+	 */
 
+
+	
+	
 	
 //	public Map<String, Integer> endScore() { 
 //		int scoreBlack = countScore(Stone.b);
@@ -521,16 +571,19 @@ public class Board {
 		return board;
 	}	
 	
-	Set<String> previousBoards = new LinkedHashSet();
+	Set<ClientBoard> previousBoards = new LinkedHashSet();
 	//opslaan van de array die het board vormt
 	
-	public boolean isPreviousBoard(String nextBoard) {
-		for (String previous : previousBoards) {
-			if (nextBoard.equals(previous)) {
-				return true;
-			}
-		}
-		return false;
+	public boolean isPreviousBoard(ClientBoard nextBoard) {
+//		for (Board previous : previousBoards) {
+//			if (nextBoard.equals(previous)) {
+//				return true;
+//			}
+//			// to do bijhouden wat de verschillende borden waren en hier doorheen itereren
+//			// bij elke beurt copy maken en deze opslaan.
+//		}
+//		return false;
+		return true;
 	}
 	
 	/**
@@ -551,16 +604,8 @@ public class Board {
 	
 // Area scoring ------------------------------------------------------------------------------------
 	private List<Stonegroup> emptyFieldStonegroup = new ArrayList<Stonegroup>();
-	private ArrayList<Integer> emptyFieldList = new ArrayList<Integer>();
+	private List<Integer> emptyFieldList = new ArrayList<Integer>();
 	
-	public ArrayList<Integer> getEmptyFieldList() {
-		return emptyFieldList;
-	}
-
-	public void setEmptyFieldList(ArrayList<Integer> emptyFieldList) {
-		this.emptyFieldList = emptyFieldList;
-	}
-
 	public int capturedArea(Stone color) {
 		int areaCaptured = 0;
 		ArrayList<Stone> neighborGroup = new ArrayList<Stone>();
@@ -586,8 +631,7 @@ public class Board {
 	}
 	
 	/**
-	 * First gather all the empty fields in a list --> emptyFieldList.
-	 * After that create all the chains, by iterating through the list of emptyFieldList.
+	 * First Create all the chains, by iterating through the list of emptyFieldList.
 	 */
 	public void createEmptyFieldChainComplete() {
 		for (int i = 0; i < dimension * dimension; i++) {
@@ -597,9 +641,32 @@ public class Board {
 		}
 		
 		for (int i = 0; i < emptyFieldList.size(); i++) {
-			createEmptyFieldChain(i, Stone.__); 
+			createEmptyFieldChain(i, Stone.__);
 		}
 	}
+	
+	
+	/**
+	 * Getting neighbor Stonecolor.
+	 */
+	public ArrayList<Stone> gettingNeighborsColor(int row, int col) {
+		ArrayList<Stone> neighbors = new ArrayList<Stone>();
+		
+		if (row > 0)  {
+			neighbors.add(getField(row - 1, col)); //top
+		}
+		if (row < dimension - 1) {
+			neighbors.add(getField(row + 1, col)); //down
+		}
+		if (col > 0) {
+			neighbors.add(getField(row, col - 1)); //left
+		}
+		if (col < dimension - 1) {
+			neighbors.add(getField(row, col + 1)); //right
+		}
+		return neighbors;	
+	}
+	
 	
 	/**
 	 * Create a new Chain with emptyFields who are connected.
@@ -640,83 +707,6 @@ public class Board {
 		//remove the groups that are neighbors and make it one group.	
 		emptyStonegroup.getStonegroup().add(index(row, col)); 
 		stonegroups.add(emptyStonegroup);
-	}
-	
-	/**
-	 * Getting neighbor Stonecolor.
-	 */
-	public ArrayList<Stone> gettingNeighborsColor(int row, int col) {
-		ArrayList<Stone> neighbors = new ArrayList<Stone>();
-		
-		if (row > 0)  {
-			neighbors.add(getField(row - 1, col)); //top
-		}
-		if (row < dimension - 1) {
-			neighbors.add(getField(row + 1, col)); //down
-		}
-		if (col > 0) {
-			neighbors.add(getField(row, col - 1)); //left
-		}
-		if (col < dimension - 1) {
-			neighbors.add(getField(row, col + 1)); //right
-		}
-		return neighbors;	
-	}
-
-// Main --------------------------------------------------------
-	public static void main(String[] args) {
-		Board board = new Board();
-		board.boardInit(5);
-		Board board2 = new Board();
-		board2.boardInit(5);
-		
-		board.setField(1, 2, Stone.b);
-		
-		board.updateBoard(1, 2, Stone.b);
-		board.setField(2, 1, Stone.b);
-		board.updateBoard(2, 1, Stone.b);
-		board.setField(3, 2, Stone.b);
-		board.updateBoard(3, 2, Stone.b);
-		board.setField(2, 3, Stone.b);
-		board.updateBoard(2, 3, Stone.b);
-		
-	//	System.out.println("hello" + board.toString());
-		
-		board.setField(2, 2, Stone.w);
-		board.updateBoard(2, 2, Stone.w);
-		
-		board.setField(0, 0, Stone.w);
-	//	System.out.println("hello2" + board.toString());
-		board.updateBoard(0, 0, Stone.w);
-		
-		board.setField(1, 1, Stone.w);
-		board.updateBoard(1, 1, Stone.w);
-		
-		board.setField(0, 1, Stone.b);
-		board.updateBoard(0, 1, Stone.b);
-		
-		board.setField(2, 0, Stone.w);
-		board.updateBoard(2, 0, Stone.w);
-		
-		board.setField(1, 0, Stone.b);
-		board.updateBoard(1, 0, Stone.b);
-	
-		board2.setFields(7, Stone.__);
-		board2.setFields(11, Stone.__);
-		board2.setFields(12, Stone.__);
-	
-		
-		board2.setFields(2, Stone.w);
-		board2.setFields(6, Stone.w);
-		board2.setFields(8, Stone.w);
-		board2.setFields(10, Stone.w);
-		board2.setFields(13, Stone.w);
-		board2.setFields(16, Stone.w);
-		board2.setFields(17, Stone.w);
-		board2.setFields(0, Stone.w);
-		
-		board2.createEmptyFieldChainComplete();
-		System.out.println("emtyfield" + board.getEmptyFieldList());
 	}
 	
 } //class

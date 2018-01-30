@@ -64,13 +64,13 @@ public class ClientGO {
         System.out.println("Your first argument is: " + args[3]);	
    
 
-        Player player; 
-        if (args[3].equals("-N")) { 
-        	player = new HumanPlayer(name);
-        } else {
-        	player = new ComputerPlayer(name);
-        }
-
+//        Player player; 
+//        if (args[3].equals("-N")) { 
+//        	player = new HumanPlayer(name);
+//        } else {
+//        	player = new ComputerPlayer(name);
+//        }
+        PlayerController client; 
       
 	/**
 	 * 
@@ -78,14 +78,22 @@ public class ClientGO {
         //communicatieObject aanmaken. In dit geval een ClientController
         // create Peer object and start the two-way communication
         try {
-            PlayerController client = new PlayerController(name, sock, player);
+           
+            if (args[3].equals("-N")) { 
+            client = new HumPlayer(name, sock);
+            } else {
+            	client = new HumPlayer(name, sock);
+           // 	PlayerController client = new Computer(name, sock, player);
+            }
+    
+       // 	PlayerController client = new PlayerController(name, sock, player);
            
             Thread serverInputHandler = new Thread(client);//kan korter.
             serverInputHandler.start(); //run method regelt de inputstream die komt vanaf de server
           
             //TerminalInput
             while (true) {
-            		client.readStringConsole("input...");
+            		((HumPlayer) client).readStringConsole("...");
             }
             
            //client.shutdown();
