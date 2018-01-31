@@ -9,8 +9,8 @@ public class Test {
 
 	public static void main(String[] args) {
 		
-	    Test test = new Test();
-	    Board board = new Board();
+	  //  Test test = new Test();
+	    //Board board = new Board();
 	   // test.determineMove(board);
 	    	   // System.out.println(test.determineMove(board));
 	    //test.readInt("what is your choice?");
@@ -20,11 +20,11 @@ public class Test {
 //	    int test1 = test.determineMove(board);
 //	    System.out.println(test1);
 	    
-	    String testing = test.determineMove(board);
+	   // String testing = test.determineMove(board);
 	   // System.out.println(testing);
 	    
 		
-	    String testing1 = test.determineMove(board);
+	 //   String testing1 = test.determineMove(board);
 	   // System.out.println(testing1);
 	}
 	//pattern
@@ -66,7 +66,6 @@ public class Test {
 		}
 	}
 	
-	//kan korter geschreven worden
 	/**
 	 * This method checks if the input string contains and "_".
 	 * @param userInput

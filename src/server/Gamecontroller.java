@@ -1,63 +1,43 @@
 package server;
 
-import java.io.IOException;
-import java.net.ServerSocket;
-import java.net.Socket;
 import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Set;
-
-import com.nedap.go.gui.GOGUI;
-import com.nedap.go.gui.GOGUIImpl;
-
+import java.util.Collections;
+import java.util.List;
 import general.Protocol;
-
 import servermodel.Board;
 import servermodel.Stone;
 import serverview.TUIserver;
 
 public class Gamecontroller extends Protocol implements Runnable {
 	
-	private ArrayList<String> inputUser;
 	private ServerGO serverGO;
 	private ServerClient[] players;
 	private int currentPlayer;
-	private int boardSize;
+//	private int boardSize;
 	private Board board;
 	private static final int NUMBER_OF_PLAYERS = 2;
-	
-	//private int amountPlayers;
-	private String lastMessage;
-	private boolean settingsInput;
 	private boolean versionReseived;
 	private boolean versionPlayer1;
 	private boolean versionPlayer2;
 	private int lastPlayer;
-	private int opponent;
+	private String currentMove;
+	private String previousMove;	
 	
 	//terminated game
 	private boolean playerQuitGame;
-	//private boolean isTerminated;
 	private boolean isFinished;
 	private boolean timeOut;
-	
-	private int version;
 
-	private String currentMove;
-	//private String lastMove;
-	private String previousMove;
-	private Integer[] endResult;
 	private boolean hasBoard;
 	private int abortedPlayer;
 	private boolean isAborted;
-	private GOGUI gogui;
-	
 	private int dimensionBoard;
 	private int amountBlackStones;
 	private int amountWhiteStones;
 	private boolean stoneBasketEmpty;
 	private TUIserver view;
+//	private boolean settingsInput;
+	private List<String> inputUser;
 	
 	/** 
 	 * Creates a Gamecontroller with two Serverclients for the in and output control.
@@ -66,8 +46,6 @@ public class Gamecontroller extends Protocol implements Runnable {
 	 */
 	public Gamecontroller(ServerGO serverGO, ServerClient player1, ServerClient player2) {
 		players = new ServerClient[NUMBER_OF_PLAYERS];
-//		this.player1 = player1;
-//		this.player2 = player2;
 		this.serverGO = serverGO;
 		players[0] = player1;
 		players[1] = player2;
@@ -75,15 +53,14 @@ public class Gamecontroller extends Protocol implements Runnable {
 		lastPlayer = 0;
 		previousMove = "-1_-1";
 		board = new Board();
-		inputUser = new ArrayList<String>();
 		
-		settingsInput = false;
+		inputUser = Collections.synchronizedList(new ArrayList<String>());
+//		settingsInput = false;
 		versionReseived = false;
 		versionPlayer1 = false;
 		versionPlayer2 = false;
 		
 		//termination of the game
-		//isTerminated = false;
 		playerQuitGame = false;
 		isFinished = false;
 		timeOut = false;
@@ -104,12 +81,10 @@ public class Gamecontroller extends Protocol implements Runnable {
 		players[0].setGamecontroller(this);
 		players[1].setGamecontroller(this);
 		
-		System.out.println("The gamecontroller is started");
 		try {
 			Thread.sleep(1000);
 		} catch (InterruptedException e) {
 			System.out.println("interrupted while sleeping");
-	
 		}
 
 //  sending information about name VERSIONNUMBER and extensions. ------------
@@ -131,6 +106,7 @@ public class Gamecontroller extends Protocol implements Runnable {
 			if (!inputUser.isEmpty()) {
 // Splitting inputStream ---------------------------------------------------------
 
+			
 				String inputReadable = inputUser.get(0).replaceAll("\\" + General.DELIMITER1, " ");
 				String[] words = inputUser.get(0).split("\\" + General.DELIMITER1);
 				String idPlayer = words[0];
@@ -156,8 +132,7 @@ public class Gamecontroller extends Protocol implements Runnable {
 							
 							// Step 2 remove the message
 							inputUser.remove(0);
-						}
-						else {
+						} else {
 							print(inputReadable);
 							versionPlayer2 = true;
 							
@@ -189,7 +164,6 @@ public class Gamecontroller extends Protocol implements Runnable {
 				}
 //----------------------------------------------------------------------------
 //Starting game when settings are send back. Color and board size. 
-	
 				else if (isIDcurrentPlayer(idPlayer) && words.length == 4 
 						&& commando.equalsIgnoreCase(Client.SETTINGS) 
 						&& isColor(words[2]) && isInteger(words[3]) && versionReseived) {
@@ -202,7 +176,7 @@ public class Gamecontroller extends Protocol implements Runnable {
 					board.boardInit(Integer.parseInt(words[3])); 
 					setColor(words[2]);
 					hasBoard = true;
-					settingsInput = true;
+	//				settingsInput = true;
 					
 					//Step 2. print board TUI
 					print(board.toString());
@@ -244,25 +218,26 @@ public class Gamecontroller extends Protocol implements Runnable {
 						int col = Integer.parseInt(coordinates[1]);
 						
 						// Step 3 check if it is a valid move
-						if (board.isValidMove(row, col)) { 
+						Stone testStone = players[currentPlayer].getStone();
+						if (board.isValidMove(row, col, testStone) && 
+								!board.isPreviousBoard(row, col, testStone)) { 
 						
 						// Step 4 update board, game and TUI
 							Stone stone = players[currentPlayer].getStone();
 							board.setField(row, col, stone);
-							System.out.println(board.toString());
-							print("this is a previousmove bij coordinates" + previousMove);
+							view.print(board.toString());
+							
 							turnPlayer(words[2]);
-							print("this is a previousmove bij coordinates" + previousMove);
+							
 							
 							sendMessageToBoth(Server.TURN + General.DELIMITER1 + 
 									players[lastPlayer].getNamePlayer() + 
 									General.DELIMITER1 + currentMove + General.DELIMITER1 
 									+ players[currentPlayer].getNamePlayer());
 							
-							//board update
-							
-							stoneBasketEmpty = emptyBasket();
+							//board update	
 							board.updateBoard(row, col, stone);
+							stoneBasketEmpty = emptyBasket();
 							calculateStone(players[currentPlayer].getStone());
 							
 							//Step 5 remove message
@@ -284,8 +259,7 @@ public class Gamecontroller extends Protocol implements Runnable {
 								players[lastPlayer].getNamePlayer() + 
 								General.DELIMITER1 + currentMove + General.DELIMITER1 
 								+ players[currentPlayer].getNamePlayer());
-					}
-					else {
+					} else {
 						sendMessageToCurrent(Server.INVALID + 
 								"please enter a valid move, integers please");
 						inputUser.remove(0); 
@@ -296,13 +270,13 @@ public class Gamecontroller extends Protocol implements Runnable {
 				else if (!isIDcurrentPlayer(idPlayer) && commando.equalsIgnoreCase(Client.MOVE)) {
 					print(inputUser.get(0));
 					inputUser.remove(0); 
-					players[opponent(currentPlayer)].sentGameData(Server.OTHER + "This is not your turn");
-				}
-				// ---------------------------------------------------------------------
-	//QUIT during the game. Deze speler wordt afgesloten.
+					players[opponent(currentPlayer)].sentGameData(Server.OTHER + 
+							"This is not your turn");
+				} 
+	//QUIT during the game.--------------------------------------------------
+
 				else if (commando.equalsIgnoreCase(Client.QUIT)) {
 					view.print("One of the players quit");
-					//Beide spelers blijven in de available list;
 					//Send information dat de speler is gestopt.
 					abortedPlayer = determineAbortedPlayer(words[0]);
 					isAborted = true; 
@@ -311,11 +285,10 @@ public class Gamecontroller extends Protocol implements Runnable {
 					print(inputUser.get(0));
 					inputUser.remove(0); 
 					
-					//Add them to the serverlist availableServerclient.
+					//Add them to the Serverlist availableServerclient.
 					serverGO.addServerclient(players[0]);
 					serverGO.addServerclient(players[1]);
-				}
-				else {
+				} else {
 					print(words + "test");
 					inputUser.remove(0);
 				}
@@ -335,40 +308,22 @@ public class Gamecontroller extends Protocol implements Runnable {
 			
 			//Step 2. shutdown
 			shutdown();
-		
-
 		}
 	} // end run method
 	
-
 	/**
 	 * When the amount of stones is 0. The game is ended.
 	 * @return
 	 */
 	public Boolean emptyBasket() {
-		return amountBlackStones == 0 || amountWhiteStones == 0;
-		
+		return amountBlackStones == 0 || amountWhiteStones == 0;	
 	}
-
-
+	
 // Getters and setters ------------------------------------------------------
 	
-	
-	private void turnPlayer(String currentMadeMove) {
-		currentMove = currentMadeMove;
-		lastPlayer = currentPlayer; 
-		previousMove = currentMove;
-		currentPlayer = (currentPlayer + 1) % 2;
-	}
-
 
 	public Board getBoard() {
 		return board;
-	}
-	
-	public String stoneToName() {
-		//TODO
-		return "";
 	}
 
 	/**
@@ -391,6 +346,17 @@ public class Gamecontroller extends Protocol implements Runnable {
 	}
 
 // Other methods, mainly checks -----------------------------------------------------
+	
+	/**
+	 * After the set the player, this method switches the players and set the previousmove.
+	 * @param currentMadeMove
+	 */
+	private void turnPlayer(String currentMadeMove) {
+		currentMove = currentMadeMove;
+		lastPlayer = currentPlayer; 
+		previousMove = currentMove;
+		currentPlayer = (currentPlayer + 1) % 2;
+	}
 
 	/**
 	 * Calculate the amount of stones. When the player has no stones left the game is ended.
@@ -409,11 +375,12 @@ public class Gamecontroller extends Protocol implements Runnable {
 	 * @param currentPlayer
 	 * @return
 	 */
-	public int opponent(int currentPlayer) {
-		if (currentPlayer == 1) {
+	public int opponent(int current) {
+		if (current == 1) {
 			return 0;
-		} else
+		} else {
 			return 1;
+		}
 	}
 	
 	/**
@@ -482,7 +449,7 @@ public class Gamecontroller extends Protocol implements Runnable {
 	 * @param expectedColor
 	 * @return
 	 */
-	public Boolean isColor(String expectedColor) {
+	public boolean isColor(String expectedColor) {
 		return expectedColor.equals("WHITE") || expectedColor.equals("BLACK");
 	}
 	
@@ -492,7 +459,7 @@ public class Gamecontroller extends Protocol implements Runnable {
 	 * @param clientID
 	 * @return
 	 */
-	public Boolean isIDcurrentPlayer(String clientID) {
+	public boolean isIDcurrentPlayer(String clientID) {
 		return players[currentPlayer].getClientTag().equals(clientID);
 	}
 	
@@ -501,34 +468,46 @@ public class Gamecontroller extends Protocol implements Runnable {
 	 * No stone may be played so as to recreate any previous board position.
 	 * @return
 	 */
-	public boolean isValidMove(int row, int col, String boardString) {
+	public boolean isValidMove(int row, int col, Stone stone) {
 		return board.isField(row, col) &&
 				board.isEmptyField(row, col) && 
-				!board.isPreviousBoard(boardString); //TODO
+				!board.isPreviousBoard(row, col, stone);
 		
 	}
 	
 // Communication ----------------------------------------------
+	/**
+	 * Prints messages to System.out.
+	 * @param message
+	 */
 	private void print(String message) {
 		System.out.println(message);
 		
 	}
 	
+	/**
+	 * Sends a message to both players in the game.
+	 * @param message
+	 */
 	public void sendMessageToBoth(String message) {
 		players[0].sentGameData(message);
 		players[1].sentGameData(message);
 	}
 	
+	/**
+	 * Sends a message to the current player.
+	 * @param message
+	 */
 	public void sendMessageToCurrent(String message) {
 		players[currentPlayer].sentGameData(message);
 	}
 	
 	/**
-	 * Creates the list of messages that are send.
+	 * Creates the list of messages that are sent by the 
+	 * players at the clientside.
 	 * @param line
 	 */
 	public void notify(String line) {
-		
 		inputUser.add(line);
 	}
 	
@@ -568,35 +547,21 @@ public class Gamecontroller extends Protocol implements Runnable {
 	 * The game is ended when the game isFinished, playerQuitGame or timeOut.
 	 * @return true if isFinished, playerQuitGame or timeOut is true.
 	 */
-	public Boolean isTerminated() {
+	public boolean isTerminated() {
 		return isFinished || playerQuitGame || timeOut || stoneBasketEmpty;
 	}
-		
-	public Boolean isTimeOut() {
+	
+	/**
+	 * Should time the current player. When time is over the game is ended.
+	 * @return
+	 */
+	public boolean isTimeOut() {
 		//TODO
 		return false;
 	}
 	
-
 // Scoring -----------------------------------------------------------------------------
-	
-	
-	/**
-	 * This method maps the players name with the score.
-	 */
-	public Map<String, Integer> endScore() { 
-		int scorePlayer1 = board.countScore(players[0].getStone());
-		int scorePlayer2 = board.countScore(players[1].getStone());
 
-
-		// Mapping the score to the color
-		Map<String, Integer> scores = new HashMap<String, Integer>();
-		scores.put(players[0].getName(), scorePlayer1);
-		scores.put(players[1].getName(), scorePlayer2);
-
-		return scores;
-	}
-	
 	/**
 	 * This gives the endResult of the game. 
 	 * When a player aborted the game then his or her score is 0.
@@ -631,7 +596,7 @@ public class Gamecontroller extends Protocol implements Runnable {
 		return endresult;
 	}
 
-	// Other methods ----------------------------------------------------------------------
+// Other methods ----------------------------------------------------------------------
 	
 	/**
 	 * Switching the color.
@@ -649,6 +614,4 @@ public class Gamecontroller extends Protocol implements Runnable {
 	public void shutdown() {
 		//TODO
 	}
-	
-
 }

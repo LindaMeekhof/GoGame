@@ -1,17 +1,9 @@
 package client;
 
-import java.io.BufferedReader;
 import java.io.IOException;
-import java.io.InputStreamReader;
 import java.net.InetAddress;
 import java.net.Socket;
 import java.net.UnknownHostException;
-
-import clientmodel.ComputerPlayer;
-import clientmodel.HumanPlayer;
-import clientmodel.Player;
-
-
 
 public class ClientGO {
 	private static final String USAGE
@@ -28,12 +20,13 @@ public class ClientGO {
 			System.exit(0);
 		}
 
-		String name = args[0]; //set name of client, is ook de naam van de speler.
+		String name = args[0]; 
 		InetAddress addr = null;
 		int port = 0;
 		Socket sock = null;
 		
-		// check args[1] - the IP-adress is unknown.
+		
+		//check args[1] - the IP-adress is unknown.
         try {
             addr = InetAddress.getByName(args[1]);
         } catch (UnknownHostException e) {
@@ -60,16 +53,7 @@ public class ClientGO {
                     + " and port " + port);
         }
     
- 		   
-        System.out.println("Your first argument is: " + args[3]);	
-   
 
-//        Player player; 
-//        if (args[3].equals("-N")) { 
-//        	player = new HumanPlayer(name);
-//        } else {
-//        	player = new ComputerPlayer(name);
-//        }
         PlayerController client; 
       
 	/**
@@ -81,26 +65,21 @@ public class ClientGO {
         		client = new HumPlayer(name, sock);
         	} else {
         		client = new HumPlayer(name, sock);
-    //    		client = new ComputerPlayer(name, sock);
-        		// 	PlayerController client = new Computer(name, sock, player);
+        		//  client = new ComputerPlayer(name, sock);
         	}
 
-        	// 	PlayerController client = new PlayerController(name, sock, player);
         	Thread serverInputHandler = new Thread(client);
         	serverInputHandler.start(); 
 
-        	//TerminalInput
         	while (true) {
-        		((HumPlayer) client).readStringConsole("...");
+        		((HumPlayer) client).readStringConsole(" ");
         	}
       
         } catch (IOException e) {
             e.printStackTrace();
         }
-    
-        
-      
-	} //main
+
+	} 
 }
 
 	

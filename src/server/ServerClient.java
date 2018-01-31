@@ -22,9 +22,7 @@ public class ServerClient extends Thread {
 	private String namePlayer;
 	private String stoneColorString;
 
-	
-
-	private Boolean isTurn;
+//	private Boolean isTurn;
 //	private String line;
 	
 	/**
@@ -33,18 +31,15 @@ public class ServerClient extends Thread {
 	 * @param sockArg
 	 * @throws IOException
 	 */
-	public ServerClient(ServerGO serverArgument, Socket sockArgument, int identityNumber) throws IOException {
+	public ServerClient(ServerGO serverArgument, Socket sockArgument, int identityNumber) 
+			throws IOException {
 		this.clientTag = Integer.toString(identityNumber);
 		this.server = serverArgument;
 		this.sock = sockArgument; 
 		in = new BufferedReader(new InputStreamReader(sockArgument.getInputStream()));
 		out = new BufferedWriter(new OutputStreamWriter(sockArgument.getOutputStream()));
-		
-		isTurn = false;
 	}
 
-	
-	
 	// Getters and setters --------------------------------------------------
 	
 	/**
@@ -70,21 +65,6 @@ public class ServerClient extends Thread {
 	public String getClientTag() {
 		return clientTag;
 	}
-
-	
-//	returns the line which comes from the player.
-//	public String inputPlayer() {
-//		return line;
-//	}
-	
-	
-	/**
-	 * setTurn boolen. Deze is nog niet gebruikt
-	 * @param isTurn
-	 */
-	public void setTurn(boolean isTurn) {
-		this.isTurn = isTurn;
-	}
 	
 	/**
 	 * set the gamGamecontroller.
@@ -92,8 +72,7 @@ public class ServerClient extends Thread {
 	 */
 	public void setGamecontroller(Gamecontroller gamecontroller) {
 		this.gamecontroller = gamecontroller;
-	}
-	
+	}	
 
 	/**
 	 * Get the stone (Stone.w or stone.b) of this ServerClient.
@@ -131,43 +110,6 @@ public class ServerClient extends Thread {
 		this.stoneColorString = stoneColorString;
 	}
 	
-//	public String getStoneString() {
-//		if (stone.equals(Stone.b)) {
-//			return "BLACK";
-//		}
-//		if (stone.equals(Stone.w)) {
-//			return "WHITE";
-//		}
-//		return null;
-//	}
-	
-	// InputStream client ----------------------------------------------------
-//	/**
-//	 * Handle the clientInput which comes through the Socket.
-//	 */
-//	@Override
-//	public void run() {
-//		//String line;
-//		try { 
-//			// String line;
-//			while (in.readLine() != null) {
-//				line = in.readLine();
-//				//System.out.println(line);
-//				String[] words = line.split("\\" + General.DELIMITER1);
-////				if (words[0].equals("EXIT")) {
-////					shutdown();
-////				} 
-////				else {
-////					gamecontroller.notify(clientTag + General.DELIMITER1 + line);
-////				}
-//				gamecontroller.notify(clientTag + General.DELIMITER1 + line);
-//			} 
-//			shutdown();
-//		} catch (IOException e) {
-//			System.out.println("No line was read"); 
-//		}
-//	}
-	
 	/**
 	 * Handle the clientInput which comes through the Socket.
 	 */
@@ -176,24 +118,20 @@ public class ServerClient extends Thread {
 		//String line;
 		try { 
 			String line;
-			while (in.readLine() != null) {
-				line = in.readLine();
-				//System.out.println(line);
-//				String[] words = line.split("\\" + General.DELIMITER1);
-//				if (words[0].equals("EXIT")) {
-//					shutdown();
-//				} 
-//				else {
-//					gamecontroller.notify(clientTag + General.DELIMITER1 + line);
-//				}
-				gamecontroller.notify(clientTag + General.DELIMITER1 + line);
+			while ((line = in.readLine()) != null) {
+				String[] words = line.split("\\" + General.DELIMITER1);
+				if (words[0].equals("EXIT")) {
+					System.out.println("kdfjlae");
+					shutdown(); 
+				} else {			
+					gamecontroller.notify(clientTag + General.DELIMITER1 + line);		
+				}
 			} 
 			shutdown();
 		} catch (IOException e) {
 			System.out.println("No line was read"); 
 		}
 	}
-	
 
 	// Outputstream client -----------------------------------------------------
 	/** 
@@ -201,7 +139,7 @@ public class ServerClient extends Thread {
 	 */
 	public void sentGameData(String message) {
 		try {
-			out.newLine();
+		//	out.newLine();
 			out.write(message);
 			out.newLine();
 			out.flush();

@@ -3,15 +3,11 @@ package client;
 import java.io.IOException;
 import java.net.Socket;
 import java.util.Scanner;
-
 import general.Protocol.Client;
 import general.Protocol.General;
-import general.Protocol;
-import general.Protocol.Server;
 import servermodel.Board;
 
 public class HumPlayer extends PlayerController {
-
 
 	/**
 	 * Creating a HumanPlayer to play the GOGAME. 
@@ -40,8 +36,7 @@ public class HumPlayer extends PlayerController {
 				if (scannerLine.hasNextLine()) {
 					stringRead = true;
 					value = scannerLine.nextLine();
-					//System.out.println(value); //output terminal
-					//sends a message directly to out.
+				
 					String[] inputConsole = value.split(" ");
 					String commando = inputConsole[0].toUpperCase();
 
@@ -52,7 +47,11 @@ public class HumPlayer extends PlayerController {
 							//ValidMove moet nog gecheckt worden.
 						case "MOVE":
 							if (inputConsole.length == 3 && isInteger(inputConsole[1]) && 
-								isInteger(inputConsole[2])) {
+								isInteger(inputConsole[2]) && 
+								board.isValidMove(Integer.parseInt(inputConsole[1]), 
+										Integer.parseInt(inputConsole[2]), stone) && 
+								!board.isPreviousBoard(Integer.parseInt(inputConsole[2]), 
+										Integer.parseInt(inputConsole[2]), stone)) {
 								sendMessage(Client.MOVE + General.DELIMITER1 + 
 										inputConsole[1] + General.DELIMITER2 + inputConsole[2]);
 							} else if (inputConsole[1].equalsIgnoreCase("PASS")) {

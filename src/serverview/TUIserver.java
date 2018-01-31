@@ -1,22 +1,19 @@
 package serverview;
 
-
-import com.nedap.go.gui.InvalidCoordinateException;
-
-import server.Gamecontroller;
 import servermodel.Board;
-
 
 public class TUIserver {
 
 	private Object board;
-	private Gamecontroller controller;
 
+	/**
+	 * Constructor.
+	 * Making a TUIServer
+	 * @param board
+	 */
 	public TUIserver(Board board) {
-	//	this.controller = gamecontroller;
 		this.board = board;
 	}
-	
 	
 	/**
 	 * After boardInit the TUI should show the empty board.
@@ -31,6 +28,10 @@ public class TUIserver {
 			+ "\n");
 	}
 	
+	/**
+	 * Show the endresult of the game.
+	 * @param endScore
+	 */
 	public void showEndResult(String endScore) {
 		print(endScore);
 	}

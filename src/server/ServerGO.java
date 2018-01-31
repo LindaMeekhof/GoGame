@@ -8,7 +8,7 @@ import java.util.ArrayList;
 
 
 public class ServerGO extends Thread {
-	private static final String USEINPUT = "The server needs: " + "<name><port>";
+	private static final String USEINPUT = "The server needs: " + "<name> <port>";
 
 /** Starts a server-application.
  * @throws IOException */
@@ -34,36 +34,36 @@ public class ServerGO extends Thread {
 			System.out.println(USEINPUT);
 			System.out.println("ERROR: port " + args[1]
 					+ " is not an integer");
-			System.exit(0);  //normal termination.
+			System.exit(0);  
 		}
 	
 		ServerGO server = new ServerGO(Integer.parseInt(args[1]), name);
 		System.out.println("Server is listening to clients who want to connect");
-		server.start();
-		
+		server.start();	
 		
 	}
 	
-	private int clientnumber;
+	
 	private int port;
 	private String serverName;
-	private ArrayList<ServerClient> availableServerClient;
-	private ArrayList<ServerClient> playingServerClient;
+	private ArrayList<ServerClient> availableServerClients;
+	private ArrayList<ServerClient> playingServerClients;
 //	private ArrayList<Gamecontroller> gamethreads;
 	
 	/** Constructs a new Server object. */
 	public ServerGO(int portArg, String serverName) {
 		this.port = portArg;
 		this.serverName = "LindaServer";
-		this.availableServerClient = new ArrayList<ServerClient>();
-		this.playingServerClient = new ArrayList<ServerClient>();
+		this.availableServerClients = new ArrayList<ServerClient>();
+		this.playingServerClients = new ArrayList<ServerClient>();
 //		this.gamethreads = new ArrayList<Gamecontroller>(); 
 	}
 	
 	/**
 	 * Create a ServerClient threads which handles the communication with the client.
-	 * in new thread omdat de server moet blijven reageren op andere spelers die binnenkomen.
-	 * bij twee spelers moet er ook een Gamecontroller thread worden aangemaakt.
+	 * in new thread. In a new thread because the server needs to respond to new clients.
+	 * When two clients are connected, a new Gamecontroller thread is created.
+	 * This is the thread that controls the game and the incoming input of the players. 
 	 */
 	public void run() { 
 		try (ServerSocket ssock = new ServerSocket(port);) {
@@ -78,28 +78,21 @@ public class ServerGO extends Thread {
 				client.start();
 				addServerclient(client);
 						
-				if (availableServerClient.size() == 2) {
-					Thread t1 = new Thread(new Gamecontroller(this, availableServerClient.get(0), 
-							availableServerClient.get(1)));
+				if (availableServerClients.size() == 2) {
+					Thread t1 = new Thread(new Gamecontroller(this, availableServerClients.get(0), 
+							availableServerClients.get(1)));
 					t1.start();
-//					Thread t1 = new Thread(new Gamecontroller(this, availableServerClient.get(0), 
-//							availableServerClient.get(1)));
-//					t1.start();
 					
-					this.playingServerClient.add(availableServerClient.get(0));
-					this.playingServerClient.add(availableServerClient.get(1));
-					this.availableServerClient.remove(0);
-					this.availableServerClient.remove(0);
-
-				}
-				
+					this.playingServerClients.add(availableServerClients.get(0));
+					this.playingServerClients.add(availableServerClients.get(1));
+					this.availableServerClients.remove(0);
+					this.availableServerClients.remove(0);
+				}		
 			} 
 		} catch (IOException e) {
 			System.out.println("Error accepting clients");
 		}  
-
-	}
-		
+	}	
  
 // Getters and setters ---------------------------------------------------	
 	/**
@@ -110,19 +103,12 @@ public class ServerGO extends Thread {
 		return serverName;
 	}
 
-
-//	public void setServerName(String serverName) {
-//		this.serverName = serverName;
-//	}
-
-	
-	
 	/**
 	 * Adds a ServerClient to the list availableServerClient.
 	 * @param client
 	 */
 	public void addServerclient(ServerClient client) {
-		availableServerClient.add(client);
+		availableServerClients.add(client);
 	}
 	
 	/**
@@ -130,7 +116,7 @@ public class ServerGO extends Thread {
 	 * @param client
 	 */
 	public  void removeServerclient(ServerClient client) {
-		availableServerClient.remove(client);
+		availableServerClients.remove(client);
 	}
 	
 	/**
@@ -140,9 +126,4 @@ public class ServerGO extends Thread {
 	public void print(String message) { 
 		System.out.println(message);
 	}
-
-
-	
-
-	
 }

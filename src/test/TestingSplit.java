@@ -1,7 +1,5 @@
 package test;
 
-import general.Protocol.General;
-
 public class TestingSplit {
 
 	public static void main(String[] args) {

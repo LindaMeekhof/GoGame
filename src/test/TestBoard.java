@@ -3,22 +3,12 @@ package test;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
-import static org.junit.jupiter.api.Assertions.*;
-
-import java.awt.List;
 import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.LinkedHashSet;
-import java.util.Set;
-
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-
 import servermodel.Board;
 import servermodel.Stone;
 import servermodel.Stonegroup;
-
-
 
 class TestBoard {
 	private Board board;
@@ -27,7 +17,7 @@ class TestBoard {
 	
 	private Stone black;
 	private Stone white;
-	private ArrayList<Integer> buurMan;
+	//private ArrayList<Integer> buurMan;
 	private Board board4;
 	private Stonegroup chain1;
 	private ArrayList<Stonegroup> stonegroups;
@@ -138,22 +128,17 @@ class TestBoard {
         assertTrue(board.isFull());
     }
     
-    @Test 
-    public void isValidMove() {
-    	assertTrue(board.isValidMove(0, 0));
-    	board.setField(0, 0, black);
-    	assertFalse(board.isValidMove(0, 0));
-    }
+//    @Test 
+//    public void isValidMove() {
+//    	assertTrue(board.isValidMove(0, 0));
+//    	board.setField(0, 0, black);
+//    	assertFalse(board.isValidMove(0, 0));
+//    }
 
 	@Test
 	void testIndexToRowCol() {
-				
-		int row = board2.indexToRow(5);
-		int col = board2.indexToCol(5);
-		
+			
 		int[] coordinates = board.indexToRowCol(5);
-		int row1 = coordinates[0];
-		int col2 = coordinates[1];
 		
 		assertEquals(1, coordinates[0]);
 		assertEquals(2, coordinates[1]);

@@ -6,20 +6,15 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
 import java.net.Socket;
-import java.util.Scanner;
 
 import clientView.TUIclient;
-import clientmodel.Player;
 import general.Protocol.Client;
 import general.Protocol.General;
 import general.Protocol.Server;
 import servermodel.Board;
-import client.Stonegroup;
-import client.Stone;
 
 public abstract class PlayerController implements Runnable { 
 
-	
 	/**
 	 * Handles the input from the Server and input from the console.
 	 */
@@ -27,22 +22,13 @@ public abstract class PlayerController implements Runnable {
 	private BufferedWriter out;
 	private Socket sock;
 	private String namePlayer; //name of the Player
-	private ClientBoard board;
-	private Stone stone;
+	protected ClientBoard board;
+	protected Stone stone;
 	private TUIclient view;
-
-
+	
 	/**
 	 * Constructor creates a ClientController.
 	 */
-//	public PlayerController(String playerName, Socket sockArg, Player player) throws IOException {
-//		this.namePlayer = playerName;
-//		this.sock = sockArg;
-//		in = new BufferedReader(new InputStreamReader(sock.getInputStream())); 
-//		out = new BufferedWriter(new OutputStreamWriter(sock.getOutputStream()));
-//		this.player = player; 
-//		board = new Board(); 
-//	}
 	public PlayerController(String playerName, Socket sockArg) throws IOException {
 		this.namePlayer = playerName;
 		this.sock = sockArg;
@@ -75,7 +61,7 @@ public abstract class PlayerController implements Runnable {
 	}
 	
 
-// Input from the ServerGO ----------------------------------------------------------
+	// Input from the ServerGO ----------------------------------------------------------
 	/**
 	 * Handles the inputstream which comes from the ServerGO.
 	 */
@@ -84,21 +70,18 @@ public abstract class PlayerController implements Runnable {
 
 		String line;
 		try {
-			while (in.readLine() != null) {
-				line = in.readLine();
-				//	System.out.println(line);
+			while ((line = in.readLine()) != null) {
 				try {
 					Thread.sleep(100);
 				} catch (InterruptedException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
+					System.out.println("interupted while sleeping");
 				}
+				
 				String[] words = line.split("\\" + General.DELIMITER1);
 				String readableInput = line.replaceAll("\\" + General.DELIMITER1, " ");
 				// -----------------------------------------------------------------
 				//getting and sending name and server version
 				if (words[0].equals(Server.NAME)) {
-					System.out.println(namePlayer);
 					view.print(readableInput);
 					sendMessage(Client.NAME + General.DELIMITER1 + getName() + 
 							General.DELIMITER1 + Client.VERSION + General.DELIMITER1 + 
@@ -152,12 +135,10 @@ public abstract class PlayerController implements Runnable {
 					view.print(readableInput);
 				}
 				else {
-					print(readableInput);
 				}
-			} //run
+			} 
 		} catch (IOException e) {
-			// System.out.println(" tekst");
-			e.printStackTrace();
+			System.out.println("IO exception in playercontroller");
 		}
 	}
 				
@@ -165,14 +146,7 @@ public abstract class PlayerController implements Runnable {
 		return expectedColor.equalsIgnoreCase("WHITE") || expectedColor.equalsIgnoreCase("BLACK");
 	}
 	
-//	private boolean containsEuroteken(String userInput) {
-//		return userInput.contains(Protocol.General.DELIMITER1); 
-//	}
-	
-//	private boolean containsOneUnderscore(String userInput) {
-//		return userInput.contains(Protocol.General.DELIMITER2); 
-//	}
-	
+
 	/**
 	 * This checks if the user input contains to integer.
 	 * @param expectedInt
@@ -207,12 +181,11 @@ public abstract class PlayerController implements Runnable {
 	 */
 	public void sendMessage(String message) {
 		try {
-			out.newLine(); //misschien hier niet nodig
 			out.write(message);
 			out.newLine();
 			out.flush();
 		} catch (IOException e) {
-			//somethings going wrong shutdown();
+			System.out.println("IO exception output playercontroller");
 		}
 	}
 	
@@ -223,15 +196,15 @@ public abstract class PlayerController implements Runnable {
 	public static void print(String message) {
 		System.out.println(message);
 	}
-	
+
+// Other methods ------------------------------------------------
 	public void addStone(int row, int col, Stone steen) {
 		board.setField(row, col, steen);
 	}
  
-	//setBoard and Color
+//setBoard and Color
 	public void setBoardandColor(String stoneColor, String boardsize) {
 		board.boardInit(Integer.parseInt(boardsize));
-		
 		if (stoneColor.equalsIgnoreCase("BLACK")) {
 			setStone(Stone.b);
 		} else {
@@ -247,7 +220,6 @@ public abstract class PlayerController implements Runnable {
 		}
 	}
 	
-
 	public void addStone(String set, String nameParsed) {
 		String[] coordinates = set.split(General.DELIMITER2);
 		if (isInteger(coordinates[0]) && isInteger(coordinates[1])) {
@@ -257,19 +229,15 @@ public abstract class PlayerController implements Runnable {
 			Stone myStone = getStoneWithName(nameParsed);
 			board.setField(row, col, myStone);
 
-			//board update
+			try {
+				Thread.sleep(100);
+			} catch (InterruptedException e) {
+				System.out.println("interupted while sleeping");
+			}
+			
 			board.updateBoard(row, col, stone);
-
 		}
 	}
 
-	public abstract String determineMove(Board board);
-
-	
-// main --------------------------------------------------------------
-
-
-
-		
-	
+	public abstract String determineMove(Board myBoard);	
 } 

@@ -1,13 +1,12 @@
 package clientView;
 
 import client.ClientBoard;
-import client.PlayerController;
 
 public class TUIclient {
 
 	
 	private ClientBoard board;
-	private PlayerController player;
+
 
 	public TUIclient(ClientBoard board) {
 		this.board = board;
