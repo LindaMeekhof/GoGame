@@ -13,10 +13,11 @@ import clientmodel.Player;
 import general.Protocol.Client;
 import general.Protocol.General;
 import general.Protocol.Server;
+import servermodel.Board;
 import client.Stonegroup;
 import client.Stone;
 
-public class PlayerController implements Runnable { 
+public abstract class PlayerController implements Runnable { 
 
 	
 	/**
@@ -26,7 +27,6 @@ public class PlayerController implements Runnable {
 	private BufferedWriter out;
 	private Socket sock;
 	private String namePlayer; //name of the Player
-//	private Player player;
 	private ClientBoard board;
 	private Stone stone;
 	private TUIclient view;
@@ -262,6 +262,8 @@ public class PlayerController implements Runnable {
 
 		}
 	}
+
+	public abstract String determineMove(Board board);
 
 	
 // main --------------------------------------------------------------

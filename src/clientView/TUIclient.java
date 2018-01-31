@@ -14,28 +14,33 @@ public class TUIclient {
 	}
 	
 	/**
-	 * Na het opzetten van het bord
+	 * After boardInit the TUI should show the empty board.
 	 */
 	public void showBoard() {
-		System.out.println("\ncurrent game situation: \n\n" + board.toString()
-		+ "\n");
+		print("\ncurrent game situation: \n\n" + board.toString()
+			+ "\n");
 	}
 	
+	public void addStone() {
+		print("\ncurrent game situation after move: \n\n" + board.toString()
+			+ "\n");
+	}
 	
-	public void showEndScore() {
-		
+	public void showEndResult(String endScore) {
+		print(endScore);
 	}
 	
 	/**
-	 * observer naar bord
+	 * Shows the board after updating the board. 
+	 * After checking captured stones and removing these stones.
 	 */
-	private void updateView() {
-		System.out.println("\ncurrent game situation: \n\n" + board.toString()
+	public void updateView() {
+		print("\ncurrent game situation after update: \n\n" + board.toString()
 			+ "\n");
 	}
 	
 	/**
-	 * Sending a message to the terminal.
+	 * Sending a message to the user.
 	 * @param message
 	 */
 	public void print(String message) {

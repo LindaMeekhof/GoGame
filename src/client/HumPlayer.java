@@ -8,6 +8,7 @@ import general.Protocol.Client;
 import general.Protocol.General;
 import general.Protocol;
 import general.Protocol.Server;
+import servermodel.Board;
 
 public class HumPlayer extends PlayerController {
 
@@ -98,5 +99,10 @@ public class HumPlayer extends PlayerController {
 			}
 		} 
 		return value;
+	}
+	@Override
+	public String determineMove(Board board) {
+		// TODO Auto-generated method stub
+		return null;
 	}
 }

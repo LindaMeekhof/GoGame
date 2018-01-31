@@ -15,6 +15,7 @@ import general.Protocol;
 
 import servermodel.Board;
 import servermodel.Stone;
+import serverview.TUIserver;
 
 public class Gamecontroller extends Protocol implements Runnable {
 	
@@ -56,6 +57,7 @@ public class Gamecontroller extends Protocol implements Runnable {
 	private int amountBlackStones;
 	private int amountWhiteStones;
 	private boolean stoneBasketEmpty;
+	private TUIserver view;
 	
 	/** 
 	 * Creates a Gamecontroller with two Serverclients for the in and output control.
@@ -87,7 +89,9 @@ public class Gamecontroller extends Protocol implements Runnable {
 		timeOut = false;
 		hasBoard = false;
 		isAborted = false;
-		stoneBasketEmpty = false;
+		stoneBasketEmpty = false; 
+		
+		this.view = new TUIserver(board);
 	}
 
 	
@@ -115,11 +119,8 @@ public class Gamecontroller extends Protocol implements Runnable {
 					General.DELIMITER1 + Server.EXTENSIONS + General.DELIMITER1 + 0 + 
 					General.DELIMITER1 + 0 + General.DELIMITER1 + 0 + General.DELIMITER1 + 
 					0 + General.DELIMITER1 + 0 + General.DELIMITER1 + 0 + General.DELIMITER1 + 0);
-		
-		
-		//System.out.println("waiting for input from player 0");
 				
-// during game -----------------------------------------------------------		
+// The game -----------------------------------------------------------		
 		while (!isTerminated()) {
 			try {
 				Thread.sleep(20);
@@ -129,69 +130,62 @@ public class Gamecontroller extends Protocol implements Runnable {
 			
 			if (!inputUser.isEmpty()) {
 // Splitting inputStream ---------------------------------------------------------
-				System.out.println("De gamecontroller heeft input ontvangen");
-				System.out.println(inputUser);
+
 				String inputReadable = inputUser.get(0).replaceAll("\\" + General.DELIMITER1, " ");
-		
 				String[] words = inputUser.get(0).split("\\" + General.DELIMITER1);
 				String idPlayer = words[0];
 				String commando = words[1];
-//				print(words[0]);
-//				print(words[1]);
-//				print(players[0].getClientTag());
-//				print(players[1].getClientTag());
-				
-//--------------------------------------------------------------------------------
-//getting name, version and extensions. Wanneer beide clients data hebben opgestuurd START
+
+// Getting name, version and extension information----------------------------------------------
+// Both players have send the information -> the game can start
 				if (commando.equals(Client.NAME)) {
-					
-					if (idPlayer.equals(players[0].getClientTag())) {
-						print(inputReadable);
-						versionPlayer1 = true;
-//						System.out.println("" + version);
-//						print("version ontvangen");
+
+					if (words.length > 5 && isInteger(words[4])) {
+						if (idPlayer.equals(players[0].getClientTag())) {
+							print(inputReadable);
+							versionPlayer1 = true;
 						
-						players[0].setNamePlayer(words[2]);
-						
-						// step 1. check VERSIONNUMBER
-						if (words[4].equals("6")) {
-							print("versionnumbers are equal");
-						} else {
-							players[0].sentGameData(Server.INCOMPATIBLEPROTOCOL);
+							players[0].setNamePlayer(words[2]);
+
+							// step 1. check VERSIONNUMBER
+							if (words[4].equals("6")) {
+								print("versionnumbers are equal");
+							} else {
+								players[0].sentGameData(Server.INCOMPATIBLEPROTOCOL);
+							}
+							
+							// Step 2 remove the message
+							inputUser.remove(0);
 						}
-						
-						// Step 2 remove the message
-						inputUser.remove(0);
-						
-					}
-					else {
-						print(inputReadable);
-						versionPlayer2 = true;
-						System.out.println("" + version);
-						print("version ontvangen2");
-						
-						players[1].setNamePlayer(words[2]);
-						
-						// step 1. check VERSIONNUMBER
-						if (words[4].equals("6")) {
-							print("versionnumbers are equal");
-						} else {
-							players[0].sentGameData(Server.INCOMPATIBLEPROTOCOL);
+						else {
+							print(inputReadable);
+							versionPlayer2 = true;
+							
+							players[1].setNamePlayer(words[2]);
+
+							// step 1. check VERSIONNUMBER
+							if (words[4].equals("6")) {
+								view.print("versionnumbers are equal");
+							} else {
+								players[0].sentGameData(Server.INCOMPATIBLEPROTOCOL);
+							}
+
+							//Step 2 remove the message
+							inputUser.remove(0);
 						}
-						
-						//Step 2 remove the message
-						inputUser.remove(0);
+					} else {
+						players[playerByIDtag(words[0])].sentGameData(Server.INCOMPATIBLEPROTOCOL + 
+								General.DELIMITER1 + "no valid versioninput");
 					}
-					
+
 					if (versionPlayer1 && versionPlayer2) {
 						versionReseived = true; 
-						System.out.println("beide versies ontvangen");
+						view.print("beide versies ontvangen");
 					}	
-					
+
 					// step 2. sending START ask for color and board size
 					players[currentPlayer].sentGameData(Server.START + 
 							General.DELIMITER1 + NUMBER_OF_PLAYERS);
-					
 				}
 //----------------------------------------------------------------------------
 //Starting game when settings are send back. Color and board size. 
@@ -204,7 +198,6 @@ public class Gamecontroller extends Protocol implements Runnable {
 					dimensionBoard = Integer.parseInt(words[3]);
 					amountBlackStones = dimensionBoard / 2 + 1;
 					amountWhiteStones = dimensionBoard / 2;
-					
 					
 					board.boardInit(Integer.parseInt(words[3])); 
 					setColor(words[2]);
@@ -243,8 +236,6 @@ public class Gamecontroller extends Protocol implements Runnable {
 					
 					// Step 1 split words for coordinates
 					String[] coordinates = words[2].split(General.DELIMITER2);
-//					System.out.println(coordinates[0]);
-//					System.out.println(coordinates[1]);
 					
 					// Step 2 Determine if it are coordinates or PASS
 					if (isInteger(coordinates[0]) && isInteger(coordinates[1])) {
@@ -270,10 +261,9 @@ public class Gamecontroller extends Protocol implements Runnable {
 							
 							//board update
 							
-							calculateStone(players[currentPlayer].getStone());
-							
 							stoneBasketEmpty = emptyBasket();
 							board.updateBoard(row, col, stone);
+							calculateStone(players[currentPlayer].getStone());
 							
 							//Step 5 remove message
 							inputUser.remove(0);
@@ -282,12 +272,11 @@ public class Gamecontroller extends Protocol implements Runnable {
 							inputUser.remove(0); 
 						}
 					} else if (words[2].equalsIgnoreCase(Client.PASS)) {
-						// isFinished = true; PASS two times in a row.
 						
 						currentMove = Client.PASS;
 						inputUser.remove(0);
 						
-						
+						// Check if the game is finished with two consecutive passes
 						finished();
 						turnPlayer(words[2]);
 						
@@ -307,12 +296,12 @@ public class Gamecontroller extends Protocol implements Runnable {
 				else if (!isIDcurrentPlayer(idPlayer) && commando.equalsIgnoreCase(Client.MOVE)) {
 					print(inputUser.get(0));
 					inputUser.remove(0); 
-					players[opponent].sentGameData("This is not your turn");
+					players[opponent(currentPlayer)].sentGameData(Server.OTHER + "This is not your turn");
 				}
 				// ---------------------------------------------------------------------
 	//QUIT during the game. Deze speler wordt afgesloten.
 				else if (commando.equalsIgnoreCase(Client.QUIT)) {
-					print("One of the players quit");
+					view.print("One of the players quit");
 					//Beide spelers blijven in de available list;
 					//Send information dat de speler is gestopt.
 					abortedPlayer = determineAbortedPlayer(words[0]);
@@ -321,7 +310,10 @@ public class Gamecontroller extends Protocol implements Runnable {
 					playerQuitGame = true;
 					print(inputUser.get(0));
 					inputUser.remove(0); 
-	
+					
+					//Add them to the serverlist availableServerclient.
+					serverGO.addServerclient(players[0]);
+					serverGO.addServerclient(players[1]);
 				}
 				else {
 					print(words + "test");
@@ -333,23 +325,21 @@ public class Gamecontroller extends Protocol implements Runnable {
 	// -----------------------------------------------------------------------
 	//When the game is terminated send a message to both, and shutdown the program properly. 
 		
-		print("game over");
+		view.print("game over");
 		if (hasBoard) {
-			
+			//Step 1. Sending the information about the endscore
+			view.showEndResult(endResult());
 			sendMessageToBoth(Server.ENDGAME + General.DELIMITER1 
 				+ determineReasonTermination() + General.DELIMITER1 
 				+ endResult());
+			
+			//Step 2. shutdown
 			shutdown();
 		
 
 		}
 	} // end run method
 	
-	
-
-
-
-
 
 	/**
 	 * When the amount of stones is 0. The game is ended.
@@ -380,17 +370,6 @@ public class Gamecontroller extends Protocol implements Runnable {
 		//TODO
 		return "";
 	}
-
-
-//	public void getName(String color) {
-//		if (players[0].getName(color).equals("BLACK")) {
-//			players[0].setStone("BLACK");
-//			players[1].setStone("WHITE");
-//		} else {
-//			players[0].setStone("WHITE");
-//			players[1].setStone("BLACK");
-//		}
-//	}
 
 	/**
 	 * When getting the settings from the client, set the color. 
@@ -449,6 +428,20 @@ public class Gamecontroller extends Protocol implements Runnable {
 			return 1;
 		}
 	} 
+	
+	/**
+	 * Determine which player send the message.
+	 * @param idTag
+	 * @return
+	 */
+	public int playerByIDtag(String idTag) {
+		if (players[0].getClientTag().equals(idTag)) {
+			return 0;
+		} else {
+			return 1;
+		}
+	} 
+	
 	
 	/** 
 	 * In GO black starts with the first turn. This method returns which ServerClient is black. 

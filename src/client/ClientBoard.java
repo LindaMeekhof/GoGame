@@ -142,7 +142,6 @@ public class ClientBoard {
 	
 	
 	/**
-	 * Klopt deze?
 	 * This method sets the field, indicated with row and col, to the given stone parameter.
 	 * @param row is the field's row.
 	 * @param col is the field's  column.

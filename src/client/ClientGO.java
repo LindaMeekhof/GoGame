@@ -80,7 +80,8 @@ public class ClientGO {
         	if (args[3].equals("-N")) { 
         		client = new HumPlayer(name, sock);
         	} else {
-        		client = new ComputerPlayer(name, sock);
+        		client = new HumPlayer(name, sock);
+    //    		client = new ComputerPlayer(name, sock);
         		// 	PlayerController client = new Computer(name, sock, player);
         	}
 

@@ -14,13 +14,15 @@ public class ServerGO extends Thread {
  * @throws IOException */
 	public static void main(String[] args) throws IOException {
 		
-		//when the <name> and <port> do not correspond to the expected. Ask for them.
+		/**
+		 * When the <name> and <port> do not correspond to the expected. Ask for them.
+		 */
 		if (args.length != 2) {
 			System.out.println(USEINPUT);
 			System.exit(0);
 		}
 		
-		String name = args[0]; //sets the name of the server, not necessary
+		String name = args[0];
 		int port = 0;
 		
 		/**
@@ -28,21 +30,16 @@ public class ServerGO extends Thread {
 		 */
 		try {
 			port = Integer.parseInt(args[1]);
-		} catch (NumberFormatException e) { //if not a number
+		} catch (NumberFormatException e) {
 			System.out.println(USEINPUT);
 			System.out.println("ERROR: port " + args[1]
 					+ " is not an integer");
 			System.exit(0);  //normal termination.
 		}
-
-		
-		
+	
 		ServerGO server = new ServerGO(Integer.parseInt(args[1]), name);
 		System.out.println("Server is listening to clients who want to connect");
 		server.start();
-		
-		
-		//System.out.println("gaat nog steeds door");
 		
 		
 	}
@@ -51,6 +48,7 @@ public class ServerGO extends Thread {
 	private int port;
 	private String serverName;
 	private ArrayList<ServerClient> availableServerClient;
+	private ArrayList<ServerClient> playingServerClient;
 //	private ArrayList<Gamecontroller> gamethreads;
 	
 	/** Constructs a new Server object. */
@@ -58,6 +56,7 @@ public class ServerGO extends Thread {
 		this.port = portArg;
 		this.serverName = "LindaServer";
 		this.availableServerClient = new ArrayList<ServerClient>();
+		this.playingServerClient = new ArrayList<ServerClient>();
 //		this.gamethreads = new ArrayList<Gamecontroller>(); 
 	}
 	
@@ -78,14 +77,21 @@ public class ServerGO extends Thread {
 				ServerClient client = new ServerClient(this, sock, clientIdentity);
 				client.start();
 				addServerclient(client);
-				
-			
+						
 				if (availableServerClient.size() == 2) {
 					Thread t1 = new Thread(new Gamecontroller(this, availableServerClient.get(0), 
 							availableServerClient.get(1)));
 					t1.start();
+//					Thread t1 = new Thread(new Gamecontroller(this, availableServerClient.get(0), 
+//							availableServerClient.get(1)));
+//					t1.start();
+					
+					this.playingServerClient.add(availableServerClient.get(0));
+					this.playingServerClient.add(availableServerClient.get(1));
+					this.availableServerClient.remove(0);
+					this.availableServerClient.remove(0);
+
 				}
-				//System.out.println(availableServerClient);
 				
 			} 
 		} catch (IOException e) {
@@ -109,6 +115,8 @@ public class ServerGO extends Thread {
 //		this.serverName = serverName;
 //	}
 
+	
+	
 	/**
 	 * Adds a ServerClient to the list availableServerClient.
 	 * @param client

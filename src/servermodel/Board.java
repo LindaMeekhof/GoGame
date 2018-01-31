@@ -15,6 +15,7 @@ import com.nedap.go.gui.GoGUIIntegrator;
 import com.nedap.go.gui.InvalidCoordinateException;
 
 import general.Protocol.General;
+import serverview.TUIserver;
 
 
 
@@ -40,6 +41,7 @@ public class Board {
     /*@ invariant (\forall int i; 0 <= i & i < DIM*DIM;
         getField(i) == Stone.__ || getField(i) == Stone.w || getField(i) == Stone.b); */
 	private Stone[] fields;
+	private TUIserver gotui;
 
 	
 //	public Board() {
@@ -76,6 +78,8 @@ public class Board {
 		gogui.startGUI();
 		gogui.setBoardSize(9);
 		this.dimension = dimension;
+		gotui = new TUIserver(this);
+		gotui.showBoard();
 	}
 	
 	/**
@@ -164,6 +168,7 @@ public class Board {
 	public void setField(int row, int col, Stone stone) {
 		this.fields[index(row, col)] = stone;
 		gogui.addStone(col, row, stone.equals(Stone.w));
+		gotui.addStone();
 	}
 
 	/**
@@ -252,6 +257,8 @@ public class Board {
 	public void reset() {
 		for (int i = 0; i < dimension * dimension; i++) {
 			fields[i] = Stone.__;
+			gogui.clearBoard();
+			gotui.showBoard();
 		}
 	}
 	
@@ -454,23 +461,21 @@ public class Board {
 	}
 	
 	public void updateBoard(int row, int col, Stone stoneColor) {
-		// nieuwe groep maken
+		//create and update chaingroup with the last move
 		createNewChain(row, col, stoneColor);
 		removeStonesCaptured();
-		System.out.println("voor");
-		System.out.println(toString());
-		// de laatste stonechain
+		
+		// the last created stone
 		if (!groupHasLiberties(stonegroups.get(stonegroups.size() - 1))) {
 			removeStones(stonegroups.get(stonegroups.size() - 1));
 			gogui.removeStone(col, row);
 		}
-		System.out.println(toString());
+		
+		// update gotui and add this board representation to previousBoards.
 		previousBoards.add(toString());
+		gotui.showBoard();
 	}
 
-	
-
-	
 
 
 //	/**
@@ -694,60 +699,60 @@ public class Board {
 	}
 
 // Main --------------------------------------------------------
-	public static void main(String[] args) {
-	//	GOGUIImpl gogui = new GOGUIImpl();
-		Board board = new Board();
-		board.boardInit(5);
-		Board board2 = new Board();
-		board2.boardInit(5);
-		
-		board.setField(1, 2, Stone.b);
-		
-		board.updateBoard(1, 2, Stone.b);
-		board.setField(2, 1, Stone.b);
-		board.updateBoard(2, 1, Stone.b);
-		board.setField(3, 2, Stone.b);
-		board.updateBoard(3, 2, Stone.b);
-		board.setField(2, 3, Stone.b);
-		board.updateBoard(2, 3, Stone.b);
-		
-	//	System.out.println("hello" + board.toString());
-		
-		board.setField(2, 2, Stone.w);
-		board.updateBoard(2, 2, Stone.w);
-		
-		board.setField(0, 0, Stone.w);
-	//	System.out.println("hello2" + board.toString());
-		board.updateBoard(0, 0, Stone.w);
-		
-		board.setField(1, 1, Stone.w);
-		board.updateBoard(1, 1, Stone.w);
-		
-		board.setField(0, 1, Stone.b);
-		board.updateBoard(0, 1, Stone.b);
-		
-		board.setField(2, 0, Stone.w);
-		board.updateBoard(2, 0, Stone.w);
-		
-		board.setField(1, 0, Stone.b);
-		board.updateBoard(1, 0, Stone.b);
-	
-		board2.setFields(7, Stone.__);
-		board2.setFields(11, Stone.__);
-		board2.setFields(12, Stone.__);
-	
-		
-		board2.setFields(2, Stone.w);
-		board2.setFields(6, Stone.w);
-		board2.setFields(8, Stone.w);
-		board2.setFields(10, Stone.w);
-		board2.setFields(13, Stone.w);
-		board2.setFields(16, Stone.w);
-		board2.setFields(17, Stone.w);
-		board2.setFields(0, Stone.w);
-		
-		board2.createEmptyFieldChainComplete();
-		System.out.println("emtyfield" + board.getEmptyFieldList());
-	}
+//	public static void main(String[] args) {
+//	//	GOGUIImpl gogui = new GOGUIImpl();
+//		Board board = new Board();
+//		board.boardInit(5);
+//		Board board2 = new Board();
+//		board2.boardInit(5);
+//		
+//		board.setField(1, 2, Stone.b);
+//		
+//		board.updateBoard(1, 2, Stone.b);
+//		board.setField(2, 1, Stone.b);
+//		board.updateBoard(2, 1, Stone.b);
+//		board.setField(3, 2, Stone.b);
+//		board.updateBoard(3, 2, Stone.b);
+//		board.setField(2, 3, Stone.b);
+//		board.updateBoard(2, 3, Stone.b);
+//		
+//	//	System.out.println("hello" + board.toString());
+//		
+//		board.setField(2, 2, Stone.w);
+//		board.updateBoard(2, 2, Stone.w);
+//		
+//		board.setField(0, 0, Stone.w);
+//	//	System.out.println("hello2" + board.toString());
+//		board.updateBoard(0, 0, Stone.w);
+//		
+//		board.setField(1, 1, Stone.w);
+//		board.updateBoard(1, 1, Stone.w);
+//		
+//		board.setField(0, 1, Stone.b);
+//		board.updateBoard(0, 1, Stone.b);
+//		
+//		board.setField(2, 0, Stone.w);
+//		board.updateBoard(2, 0, Stone.w);
+//		
+//		board.setField(1, 0, Stone.b);
+//		board.updateBoard(1, 0, Stone.b);
+//	
+//		board2.setFields(7, Stone.__);
+//		board2.setFields(11, Stone.__);
+//		board2.setFields(12, Stone.__);
+//	
+//		
+//		board2.setFields(2, Stone.w);
+//		board2.setFields(6, Stone.w);
+//		board2.setFields(8, Stone.w);
+//		board2.setFields(10, Stone.w);
+//		board2.setFields(13, Stone.w);
+//		board2.setFields(16, Stone.w);
+//		board2.setFields(17, Stone.w);
+//		board2.setFields(0, Stone.w);
+//		
+//		board2.createEmptyFieldChainComplete();
+//		System.out.println("emtyfield" + board.getEmptyFieldList());
+//	}
 	
 } //class
