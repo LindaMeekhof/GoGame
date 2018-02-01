@@ -26,3 +26,6 @@ Third start up a second client with four arguments:
 ClientGO.jar 
 
 ==> Make sure you do not use the same names. This does not work.
+==> De input kan gewoon met spaties maar wel met het commando ervoor
+==> settings black 12
+==> move 1 3
